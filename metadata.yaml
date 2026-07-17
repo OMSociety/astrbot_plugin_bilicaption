@@ -1,6 +1,6 @@
 name: bilicaption
 display_name: BiliCaption - B站字幕提取 & 深度解读
 desc: 获取B站视频字幕纯文本 + 深度解读工具（可选高token消耗）
-version: v1.1.0
+version: v1.0.0
 author: SodaCode & OMSociety
 repo: https://github.com/OMSociety/astrbot_plugin_bilicaption

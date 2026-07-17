@@ -1,6 +1,6 @@
 # BiliCaption - B站字幕提取 & 深度解读
 
-[![Version](https://img.shields.io/badge/version-v1.1.0-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A5v4-green.svg)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange.svg)](LICENSE)
 
