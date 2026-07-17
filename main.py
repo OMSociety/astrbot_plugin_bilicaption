@@ -1,17 +1,20 @@
+import os
 import re
-import aiohttp
-from typing import Optional, Dict, Any
+import tempfile
 
-from astrbot.api.event import filter, AstrMessageEvent
+import aiohttp
+from bilibili_api import Credential, video
+from pydantic import Field
+from pydantic.dataclasses import dataclass
+
+from astrbot.api import AstrBotConfig, logger
+from astrbot.api.event import MessageChain
 from astrbot.api.star import Context, Star, register
-from astrbot.api import logger, AstrBotConfig
 from astrbot.core.agent.run_context import ContextWrapper
 from astrbot.core.agent.tool import FunctionTool
 from astrbot.core.astr_agent_context import AstrAgentContext
-from bilibili_api import video, Credential
-
-from pydantic import Field
-from pydantic.dataclasses import dataclass
+from astrbot.core.message.components import File as FileComponent
+from astrbot.core.message.components import Plain
 
 # BVID 格式预编译正则：BV开头，后续为字母或数字
 BVID_PATTERN = re.compile(r"BV[a-zA-Z0-9]{10,12}")
@@ -57,7 +60,17 @@ async def resolve_b23(short_url: str) -> str:
     return bvid
 
 
-@dataclass(config=dict(arbitrary_types_allowed=True))
+def _sanitize_filename(name: str, max_len: int = 50) -> str:
+    """清理文件名，去除非法字符并截断。"""
+    # 替换 Windows/Linux 文件名非法字符
+    name = re.sub(r'[\\/:*?"<>|]', "_", name)
+    name = re.sub(r"\s+", " ", name).strip()
+    if len(name) > max_len:
+        name = name[:max_len].rstrip() + "..."
+    return name or "unknown"
+
+
+@dataclass(config={"arbitrary_types_allowed": True})
 class BilibiliTool(FunctionTool[AstrAgentContext]):
     name: str = "bilibili_caption"
     description: str = "获取哔哩哔哩视频的字幕纯文本。如果视频没有字幕则返回提示信息。"
@@ -80,12 +93,52 @@ class BilibiliTool(FunctionTool[AstrAgentContext]):
     ct: Context = Field(default=None)
     # 字幕最大长度限制（0 表示不截断）
     max_subtitle_length: int = 0
+    # 是否自动发送 txt 文件到聊天
+    auto_send_txt: bool = False
 
-    def _check_config(self) -> Optional[str]:
+    def _check_config(self) -> str | None:
         """防御性检查：确保核心依赖已注入"""
         if not self.ct:
             return "插件内部错误：上下文未注入"
         return None
+
+    async def _send_txt_file(
+        self,
+        context: ContextWrapper[AstrAgentContext],
+        title: str,
+        bvid: str,
+        content: str,
+    ) -> None:
+        """将字幕内容保存为 txt 文件并发送到当前会话。"""
+        try:
+            # 创建临时文件
+            safe_title = _sanitize_filename(title)
+            tmp_dir = tempfile.gettempdir()
+            filepath = os.path.join(tmp_dir, f"{safe_title}_{bvid}.txt")
+
+            # 写入文件
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(f"标题: {title}\nBVID: {bvid}\n{'=' * 40}\n\n{content}")
+
+            logger.info(f"字幕已保存至: {filepath}")
+
+            # 发送文件到当前会话
+            agent_ctx = context.context
+            session = agent_ctx.event.unified_msg_origin
+            await agent_ctx.context.send_message(
+                session,
+                MessageChain(
+                    [
+                        FileComponent(
+                            name=f"{safe_title}.txt",
+                            file=filepath,
+                        ),
+                        Plain(text=f"已发送视频《{title}》的字幕文件"),
+                    ]
+                ),
+            )
+        except Exception as e:
+            logger.error(f"发送字幕文件失败: {e}")
 
     async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> str:
         # 1. 防御性检查
@@ -176,6 +229,11 @@ class BilibiliTool(FunctionTool[AstrAgentContext]):
             if not subtitle_text:
                 return f"视频《{title}》字幕内容解析为空。"
 
+            # 9. 自动发送 txt 文件（如果开启）
+            if self.auto_send_txt:
+                # 异步发送，不阻塞主流程
+                await self._send_txt_file(context, title, bvid, subtitle_text)
+
             # 返回字幕纯文本，前附标题行
             return f"[字幕] {title}\n\n{subtitle_text}"
 
@@ -196,7 +254,7 @@ class BilibiliTool(FunctionTool[AstrAgentContext]):
     "astrbot_plugin_bilicaption",
     "SodaCode & OMSociety",
     "获取B站视频字幕纯文本，不做AI总结，直接返回原始字幕。",
-    "1.2.0",
+    "1.0.0",
 )
 class BiliCaption(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -224,6 +282,7 @@ class BiliCaption(Star):
         sessdata = bilibili_cookie.get("sessdata", "")
         bili_jct = bilibili_cookie.get("bili_jct", bilibili_cookie.get("id", ""))
         max_len = plugin_config.get("max_subtitle_length", 0)
+        auto_send_txt = plugin_config.get("auto_send_txt", False)
 
         # 3. 配置完整性校验日志
         if not sessdata:
@@ -239,6 +298,7 @@ class BiliCaption(Star):
             bili_jct=bili_jct,
             ct=self.context,
             max_subtitle_length=max_len,
+            auto_send_txt=auto_send_txt,
         )
         self.context.add_llm_tools(tool)
 

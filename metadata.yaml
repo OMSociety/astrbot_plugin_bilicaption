@@ -1,6 +1,6 @@
 name: bilicaption
 display_name: BiliCaption - B站字幕提取
 desc: 获取B站视频字幕纯文本，不做AI总结，直接返回原始字幕
-version: v1.2.0
+version: v1.0.0
 author: SodaCode & OMSociety
 repo: https://github.com/OMSociety/astrbot_plugin_bilicaption

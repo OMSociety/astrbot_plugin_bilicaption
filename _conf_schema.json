@@ -17,7 +17,13 @@
     "max_subtitle_length": {
         "description": "字幕最大返回长度（字符数），0表示不限制",
         "hint": "设为0返回完整字幕，设值过大会增加token消耗",
-        "type": "number",
+        "type": "int",
         "default": 0
+    },
+    "auto_send_txt": {
+        "description": "是否自动将字幕保存为txt文件并发送到聊天中",
+        "hint": "开启后每次提取字幕都会自动发送txt文件到群里",
+        "type": "bool",
+        "default": false
     }
 }

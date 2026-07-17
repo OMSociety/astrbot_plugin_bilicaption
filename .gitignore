@@ -208,3 +208,6 @@ __marimo__/
 
 .qwen/
 gha-creds-*.json
+
+# AstrBot runtime data (auto-generated, do not commit)
+data/
