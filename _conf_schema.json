@@ -25,5 +25,17 @@
         "hint": "开启后每次提取字幕都会自动发送txt文件到群里",
         "type": "bool",
         "default": false
+    },
+    "enable_read_tool": {
+        "description": "是否启用bilibili_read深度解读工具（高token消耗）",
+        "hint": "关闭时bilibili_read不会注册到LLM工具列表。开启后当用户要求解读视频时，bot会完整读取字幕全文再进行总结",
+        "type": "bool",
+        "default": false
+    },
+    "read_max_subtitle_length": {
+        "description": "bilibili_read工具的字幕最大返回长度（字符数），0表示不限制（全文通读）",
+        "hint": "完整字幕可能很长，设一个上限防止上下文溢出。建议设为0或很大的值",
+        "type": "int",
+        "default": 0
     }
 }
