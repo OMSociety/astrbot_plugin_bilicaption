@@ -1,0 +1,23 @@
+{
+    "bilibili_cookie": {
+        "description": "B站Cookie（非必需，但配置后可获取更高清字幕）",
+        "hint": "README有详细的获取教程，快去看看罢",
+        "type": "object",
+        "items": {
+            "sessdata": {
+                "description": "sessdata",
+                "type": "string"
+            },
+            "bili_jct": {
+                "description": "bili_jct",
+                "type": "string"
+            }
+        }
+    },
+    "max_subtitle_length": {
+        "description": "字幕最大返回长度（字符数），0表示不限制",
+        "hint": "设为0返回完整字幕，设值过大会增加token消耗",
+        "type": "number",
+        "default": 0
+    }
+}
