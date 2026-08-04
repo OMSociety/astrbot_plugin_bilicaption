@@ -4,7 +4,7 @@
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A5v4-green.svg)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange.svg)](LICENSE)
 
-获取 B 站视频字幕纯文本 + 可选深度解读工具。以 LLM Tool 形式运行，自动响应含 B 站链接 / BV 号 / b23 短链的消息。
+提供获取B站视频字幕文本工具、B站视频解读工具，可识别含B站链接/BV号/b23短链的消息。
 
 > 本项目由AI编写，部分源码基于 [SodaCodeSave/astrbot_plugin_biliread](https://github.com/SodaCodeSave/astrbot_plugin_biliread) 。
 
