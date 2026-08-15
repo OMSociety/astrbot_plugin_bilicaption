@@ -12,7 +12,8 @@ from astrbot.core.message.components import File as FileComponent
 from astrbot.core.message.components import Plain
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
-from subtitle_utils import (
+
+from .subtitle_utils import (
     SubtitleFetchError,
     _sanitize_filename,
     _truncate,
