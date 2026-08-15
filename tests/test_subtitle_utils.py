@@ -1,175 +1,187 @@
 """
-Bilicaption 核心逻辑测试
+BiliCaption 核心逻辑测试
 
-测试字幕格式化、配置校验等不依赖网络的核心功能。
+直接测试 subtitle_utils.py 中的真实函数（不依赖网络与 AstrBot 环境）。
+resolve_b23 等网络环节通过 monkeypatch 桩替代。
 """
 
-import json
-import sys
+import asyncio
 import os
-from typing import Optional
+import sys
 
-import pytest
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# 将被测试模块加入路径
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-# ---------- 模拟字幕格式化逻辑 ----------
-
-
-def format_subtitle(subtitle_list: list[dict], max_length: int = 0) -> str:
-    """格式化字幕列表为纯文本（从 main.py 提取的核心逻辑）
-
-    Args:
-        subtitle_list: 字幕列表，每项含 content 和 timestamp 等字段
-        max_length: 最大字符数，0 表示不限制
-
-    Returns:
-        格式化后的字幕纯文本
-    """
-    if not subtitle_list:
-        return ""
-
-    lines = []
-    for sub in subtitle_list:
-        content = sub.get("content", "").strip()
-        if content:
-            # 清理 HTML 标签
-            content = content.replace("<br>", "\n").replace("</br>", "")
-            lines.append(content)
-
-    text = "\n".join(lines)
-
-    if max_length > 0 and len(text) > max_length:
-        text = text[:max_length] + "\n\n（字幕过长，已截断）"
-
-    return text
+from subtitle_utils import (
+    _clean_subtitle_text,
+    _sanitize_filename,
+    _truncate,
+    normalize_bvid,
+)
 
 
-def parse_subtitle_response(api_result: dict) -> tuple[Optional[list[dict]], Optional[str]]:
-    """解析 B 站 API 返回的字幕数据（从 main.py 提取的核心逻辑）
+class TestCleanSubtitleText:
+    """字幕文本清洗测试"""
 
-    Args:
-        api_result: B 站 API 返回的字幕 JSON
+    def test_br_to_newline(self):
+        """<br> 应还原为换行"""
+        assert _clean_subtitle_text("第一行<br>第二行") == "第一行\n第二行"
 
-    Returns:
-        (subtitle_list, error_msg) 元组
-    """
-    try:
-        subtitle_data = api_result.get("data", {})
-        if not subtitle_data:
-            return None, "字幕数据为空"
+    def test_strip_html_tags(self):
+        """font 等标签应去除、保留文字"""
+        assert _clean_subtitle_text('<font color="#E5E5E5">内容</font>') == "内容"
 
-        # B 站字幕返回格式：data.subtitle.subtitles[] 或 data.subtitle_list[]
-        subtitles_raw = subtitle_data.get("subtitle", {}).get("subtitles", [])
-        if not subtitles_raw:
-            subtitles_raw = subtitle_data.get("subtitle_list", [])
+    def test_mixed_tags_and_br(self):
+        """标签与 <br> 混用"""
+        raw = '<font color="#E5E5E5">第一行<br>第二行</font>'
+        assert _clean_subtitle_text(raw) == "第一行\n第二行"
 
-        if not subtitles_raw:
-            return None, "未找到字幕信息"
+    def test_html_entities(self):
+        """HTML 实体应还原"""
+        assert _clean_subtitle_text("A &amp; B &lt;C&gt;") == "A & B <C>"
 
-        return subtitles_raw, None
+    def test_collapse_blank_lines(self):
+        """连续换行产生的空行应合并"""
+        assert _clean_subtitle_text("a<br><br><br>b") == "a\nb"
 
-    except (AttributeError, TypeError, ValueError) as e:
-        return None, f"解析字幕数据失败: {e}"
-
-
-# ---------- 测试用例 ----------
+    def test_empty_and_none(self):
+        """空输入返回空字符串"""
+        assert _clean_subtitle_text("") == ""
+        assert _clean_subtitle_text(None) == ""
 
 
-class TestFormatSubtitle:
-    """字幕格式化测试"""
+class TestTruncate:
+    """字幕截断测试"""
 
-    def test_empty_list(self):
-        """空列表应返回空字符串"""
-        assert format_subtitle([]) == ""
+    def test_no_limit(self):
+        """max_len <= 0 不截断"""
+        text = "A" * 100
+        assert _truncate(text, 0) == text
 
-    def test_single_line(self):
-        """单条字幕"""
-        subs = [{"content": "你好世界", "timestamp": 0}]
-        assert format_subtitle(subs) == "你好世界"
+    def test_short_text_unchanged(self):
+        """未超限时原样返回"""
+        text = "short"
+        assert _truncate(text, 100) == text
 
-    def test_multiple_lines(self):
-        """多条字幕"""
-        subs = [
-            {"content": "第一行", "timestamp": 0},
-            {"content": "第二行", "timestamp": 1000},
-            {"content": "第三行", "timestamp": 2000},
-        ]
-        result = format_subtitle(subs)
-        assert result == "第一行\n第二行\n第三行"
+    def test_exact_length_unchanged(self):
+        """恰好等于上限时不截断"""
+        text = "A" * 10
+        assert _truncate(text, 10) == text
 
-    def test_html_br_cleaned(self):
-        """HTML <br> 标签应替换为换行"""
-        subs = [{"content": "第一行<br>第二行", "timestamp": 0}]
-        assert format_subtitle(subs) == "第一行\n第二行"
-
-    def test_max_length_cutoff(self):
-        """设置最大长度时应截断"""
-        subs = [{"content": "A" * 100}]
-        result = format_subtitle(subs, max_length=10)
+    def test_long_text_truncated(self):
+        """超限时截断并带省略提示"""
+        result = _truncate("A" * 100, 10)
         assert len(result) < 50
-        assert "截断" in result
-
-    def test_max_length_zero(self):
-        """max_length=0 时不截断"""
-        subs = [{"content": "A" * 10000}]
-        result = format_subtitle(subs, max_length=0)
-        assert len(result) == 10000
-
-    def test_skip_blank_content(self):
-        """空 content 应跳过"""
-        subs = [
-            {"content": "", "timestamp": 0},
-            {"content": "  ", "timestamp": 1000},
-            {"content": "有效内容", "timestamp": 2000},
-        ]
-        assert format_subtitle(subs) == "有效内容"
+        assert "省略" in result
 
 
-class TestParseSubtitleResponse:
-    """字幕 API 返回结果解析测试"""
+class TestSanitizeFilename:
+    """文件名清理测试"""
 
-    def test_valid_subtitle_list(self):
-        """标准返回格式"""
-        result = {
-            "data": {
-                "subtitle": {
-                    "subtitles": [
-                        {"id": 1, "lan_doc": "中文（普通话）"},
-                        {"id": 2, "lan_doc": "英文"},
-                    ]
-                }
-            }
-        }
-        subs, err = parse_subtitle_response(result)
-        assert err is None
-        assert len(subs) == 2
+    def test_illegal_chars_replaced(self):
+        """Windows 非法字符应被替换"""
+        result = _sanitize_filename('a\\/:*?"<>|b')
+        assert '\\/:*?"<>|' not in result
 
-    def test_empty_data(self):
-        """空数据"""
-        subs, err = parse_subtitle_response({"data": {}})
-        assert subs is None
-        assert err is not None
+    def test_truncate_long_name(self):
+        """超长名称应截断"""
+        result = _sanitize_filename("A" * 100)
+        assert len(result) <= 55  # 50 字符 + "..."
+        assert result.endswith("...")
 
-    def test_no_subtitle_key(self):
-        """无字幕键"""
-        subs, err = parse_subtitle_response({"data": {"title": "test"}})
-        assert subs is None
-        assert err is not None
+    def test_blank_fallback(self):
+        """空白名称回退为 unknown"""
+        assert _sanitize_filename("   ") == "unknown"
 
-    def test_no_data_key(self):
-        """无 data 键"""
-        subs, err = parse_subtitle_response({"code": -400})
-        assert subs is None
-        assert err is not None
-
-    def test_malformed_response(self):
-        """损坏的返回"""
-        subs, err = parse_subtitle_response({"data": None})
-        assert subs is None
-        assert err is not None
+    def test_normal_name(self):
+        """正常名称原样保留"""
+        assert _sanitize_filename("我的视频") == "我的视频"
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+class TestNormalizeBvid:
+    """链接规范化测试（resolve_b23 用桩替代，避免真实网络请求）"""
+
+    @staticmethod
+    async def _fake_resolve_ok(url: str) -> str:
+        return "BV1GJ411x7h7"
+
+    @staticmethod
+    async def _fake_resolve_error(url: str) -> str:
+        return "error"
+
+    def test_pure_bvid(self, monkeypatch):
+        """纯 BV 号直接识别，不走短链解析"""
+        calls = []
+
+        async def fake_resolve(url: str) -> str:
+            calls.append(url)
+            return "error"
+
+        monkeypatch.setattr("subtitle_utils.resolve_b23", fake_resolve)
+        assert asyncio.run(normalize_bvid("BV1GJ411x7h7")) == "BV1GJ411x7h7"
+        assert calls == []
+
+    def test_full_url(self, monkeypatch):
+        """完整 B 站链接应提取出 BV 号（核心修复点）"""
+
+        async def fake_resolve(url: str) -> str:
+            return "error"
+
+        monkeypatch.setattr("subtitle_utils.resolve_b23", fake_resolve)
+        raw = "https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.999"
+        assert asyncio.run(normalize_bvid(raw)) == "BV1GJ411x7h7"
+
+    def test_b23_url(self, monkeypatch):
+        """b23 短链交给 resolve_b23，且原始 URL 原样传入"""
+        captured = {}
+
+        async def fake_resolve(url: str) -> str:
+            captured["url"] = url
+            return "BV1GJ411x7h7"
+
+        monkeypatch.setattr("subtitle_utils.resolve_b23", fake_resolve)
+        assert asyncio.run(normalize_bvid("https://b23.tv/4bdIZBf")) == "BV1GJ411x7h7"
+        assert captured["url"] == "https://b23.tv/4bdIZBf"
+
+    def test_bare_short_code(self, monkeypatch):
+        """裸短码（如 4bdIZBf）兜底按 b23.tv 解析"""
+        captured = {}
+
+        async def fake_resolve(url: str) -> str:
+            captured["url"] = url
+            return "BV1GJ411x7h7"
+
+        monkeypatch.setattr("subtitle_utils.resolve_b23", fake_resolve)
+        assert asyncio.run(normalize_bvid("4bdIZBf")) == "BV1GJ411x7h7"
+        assert captured["url"] == "https://b23.tv/4bdIZBf"
+
+    def test_empty_input(self, monkeypatch):
+        """空输入返回 error"""
+
+        async def fake_resolve(url: str) -> str:
+            return "error"
+
+        monkeypatch.setattr("subtitle_utils.resolve_b23", fake_resolve)
+        assert asyncio.run(normalize_bvid("")) == "error"
+        assert asyncio.run(normalize_bvid("   ")) == "error"
+
+    def test_resolve_failure(self, monkeypatch):
+        """短链解析失败时返回 error"""
+
+        async def fake_resolve(url: str) -> str:
+            return "error"
+
+        monkeypatch.setattr("subtitle_utils.resolve_b23", fake_resolve)
+        assert asyncio.run(normalize_bvid("https://b23.tv/4bdIZBf")) == "error"
+
+    def test_bv_with_b23_substring_not_misjudged(self, monkeypatch):
+        """BV 号含 b23 子串不应被误判为短链（核心修复点）"""
+        calls = []
+
+        async def fake_resolve(url: str) -> str:
+            calls.append(url)
+            return "error"
+
+        monkeypatch.setattr("subtitle_utils.resolve_b23", fake_resolve)
+        # BV1b2345678x 含 "b23" 但非短链，应被识别为 BV 号
+        assert asyncio.run(normalize_bvid("BV1b2345678x")) == "BV1b2345678x"
+        assert calls == []

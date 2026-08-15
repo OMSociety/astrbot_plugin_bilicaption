@@ -1,173 +1,27 @@
 import os
-import re
 import tempfile
 
-import aiohttp
-from bilibili_api import Credential, video
-from pydantic import Field
-from pydantic.dataclasses import dataclass
-
+import aiofiles
 from astrbot.api import AstrBotConfig, logger
 from astrbot.api.event import MessageChain
-from astrbot.api.star import Context, Star, register
+from astrbot.api.star import Context, Star
 from astrbot.core.agent.run_context import ContextWrapper
 from astrbot.core.agent.tool import FunctionTool
 from astrbot.core.astr_agent_context import AstrAgentContext
 from astrbot.core.message.components import File as FileComponent
 from astrbot.core.message.components import Plain
-
-# BVID 格式预编译正则：BV开头，后续为字母或数字
-BVID_PATTERN = re.compile(r"BV[a-zA-Z0-9]{10,12}")
-
-
-class SubtitleFetchError(Exception):
-    """字幕获取失败，异常消息可直接作为工具结果返回给用户"""
-
-
-async def resolve_b23(short_url: str) -> str:
-    """
-    解析 b23.tv 短链，返回真实的长链接
-    """
-    timeout = aiohttp.ClientTimeout(total=10)
-
-    if not short_url.startswith("http"):
-        short_url = "https://" + short_url
-
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        # 第一次请求
-        async with session.get(short_url, allow_redirects=False) as response:
-            real_url = response.headers.get("Location", short_url)
-
-        # 处理重定向
-        max_redirects = 10
-        for _ in range(max_redirects):
-            if not real_url.startswith("http"):
-                break
-            async with session.get(real_url, allow_redirects=False) as response:
-                next_url = response.headers.get("Location")
-                if not next_url:
-                    break
-                real_url = next_url
-
-    # 提取BVID
-    match = BVID_PATTERN.search(real_url)
-
-    logger.info(f"解析b23.tv短链成功：{short_url} -> {real_url}")
-
-    bvid = match.group(0) if match else ""
-    if not bvid:
-        logger.error(f"解析b23.tv短链失败：{short_url} -> {real_url}")
-        return "error"
-
-    logger.info(f"解析视频链接成功：{short_url} -> {bvid}")
-
-    return bvid
+from pydantic import ConfigDict, Field
+from pydantic.dataclasses import dataclass
+from subtitle_utils import (
+    SubtitleFetchError,
+    _sanitize_filename,
+    _truncate,
+    fetch_subtitle,
+    normalize_bvid,
+)
 
 
-async def normalize_bvid(raw: str) -> str:
-    """规范化输入为 BVID，支持 BV 号与 b23 短链。失败返回 'error'。"""
-    if "b23" in raw:
-        return await resolve_b23(raw)
-    if BVID_PATTERN.match(raw):
-        return raw
-    # 兜底：按短链再试一次（兼容直接粘贴短码等情况）
-    return await resolve_b23("https://b23.tv/" + raw)
-
-
-async def fetch_subtitle(bvid: str, sessdata: str, bili_jct: str) -> tuple[str, str]:
-    """
-    获取视频标题与字幕全文，供各工具复用。
-    成功返回 (title, subtitle_text)；失败抛 SubtitleFetchError。
-    """
-    credential = Credential(sessdata=sessdata, bili_jct=bili_jct)
-    v = video.Video(bvid, credential=credential)
-
-    try:
-        # 1. 获取视频基础信息（可能抛网络异常或视频不存在的 API 异常）
-        info = await v.get_info()
-        title = info.get("title", "未知标题")
-
-        # 2. 获取 CID
-        cid = await v.get_cid(0)
-
-        # 3. 获取字幕元数据
-        subtitle_info = await v.get_subtitle(cid)
-    except aiohttp.ClientError as e:
-        logger.error(f"网络请求异常: {e}")
-        raise SubtitleFetchError("网络请求异常，请稍后重试。") from e
-    except Exception as e:
-        logger.exception(f"获取视频信息失败: {bvid}")
-        raise SubtitleFetchError(f"处理视频时发生内部错误: {e}") from e
-
-    # 业务逻辑检查：是否有字幕数据
-    if not subtitle_info or not subtitle_info.get("subtitles"):
-        raise SubtitleFetchError(f"视频《{title}》暂无可用字幕。")
-
-    # 优先寻找中文字幕 (zh-CN, zh-Hans)
-    target_subtitle = None
-    for sub in subtitle_info["subtitles"]:
-        if sub.get("lan", "").startswith("zh"):
-            target_subtitle = sub
-            break
-
-    # 兜底：取第一个
-    if not target_subtitle:
-        target_subtitle = subtitle_info["subtitles"][0]
-
-    subtitle_url = target_subtitle.get("subtitle_url", "")
-    if not subtitle_url:
-        raise SubtitleFetchError("错误：字幕元数据中缺失 URL。")
-
-    # 4. 下载字幕内容
-    if not subtitle_url.startswith("http"):
-        subtitle_url = "https:" + subtitle_url
-
-    # 日志脱敏：去除 URL 参数，防止泄露签名
-    log_url = subtitle_url.split("?")[0]
-    logger.info(f"正在获取视频《{title}》字幕: {log_url}")
-
-    timeout = aiohttp.ClientTimeout(total=15)
-    try:
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(subtitle_url) as resp:
-                if resp.status != 200:
-                    raise SubtitleFetchError(
-                        f"下载字幕文件失败，HTTP 状态码: {resp.status}"
-                    )
-                subtitle_json = await resp.json()
-    except aiohttp.ClientError as e:
-        logger.error(f"网络请求异常: {e}")
-        raise SubtitleFetchError("网络请求异常，请稍后重试。") from e
-
-    # 5. 解析字幕正文
-    body = subtitle_json.get("body", [])
-    raw_text = "\n".join([item.get("content", "") for item in body])
-
-    if not raw_text:
-        raise SubtitleFetchError(f"视频《{title}》字幕内容解析为空。")
-
-    return title, raw_text
-
-
-def _truncate(text: str, max_len: int) -> str:
-    """按上限截断字幕；max_len <= 0 表示不限制。"""
-    if max_len > 0 and len(text) > max_len:
-        logger.info(f"字幕过长 ({len(text)}字符)，已执行截断。")
-        return text[:max_len] + "\n...(后续内容已省略)"
-    return text
-
-
-def _sanitize_filename(name: str, max_len: int = 50) -> str:
-    """清理文件名，去除非法字符并截断。"""
-    # 替换 Windows/Linux 文件名非法字符
-    name = re.sub(r'[\\/:*?"<>|]', "_", name)
-    name = re.sub(r"\s+", " ", name).strip()
-    if len(name) > max_len:
-        name = name[:max_len].rstrip() + "..."
-    return name or "unknown"
-
-
-@dataclass(config={"arbitrary_types_allowed": True})
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class BilibiliTool(FunctionTool[AstrAgentContext]):
     name: str = "bilibili_caption"
     description: str = "获取哔哩哔哩视频的字幕纯文本。如果视频没有字幕则返回提示信息。"
@@ -213,9 +67,9 @@ class BilibiliTool(FunctionTool[AstrAgentContext]):
             tmp_dir = tempfile.gettempdir()
             filepath = os.path.join(tmp_dir, f"{safe_title}_{bvid}.txt")
 
-            # 写入文件
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(f"标题: {title}\nBVID: {bvid}\n{'=' * 40}\n\n{content}")
+            # 写入文件（异步写，避免阻塞事件循环）
+            async with aiofiles.open(filepath, "w", encoding="utf-8") as f:
+                await f.write(f"标题: {title}\nBVID: {bvid}\n{'=' * 40}\n\n{content}")
 
             logger.info(f"字幕已保存至: {filepath}")
 
@@ -234,7 +88,7 @@ class BilibiliTool(FunctionTool[AstrAgentContext]):
                     ]
                 ),
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - 兜底保护：发送失败只记日志，不影响主流程
             logger.error(f"发送字幕文件失败: {e}")
 
     async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> str:
@@ -244,9 +98,12 @@ class BilibiliTool(FunctionTool[AstrAgentContext]):
             return config_err
 
         # 2. 格式校验与规范化
-        bvid = await normalize_bvid(kwargs.get("bvid", "").strip())
+        bvid_raw = (kwargs.get("bvid") or "").strip()
+        if not bvid_raw:
+            return "请提供要获取字幕的 B 站视频链接、BV 号或 b23.tv 短链。"
+        bvid = await normalize_bvid(bvid_raw)
         if bvid == "error":
-            return "解析b23.tv短链失败，请检查链接是否正确"
+            return "解析视频链接失败，请检查链接是否正确（支持 B 站完整链接 / BV 号 / b23.tv 短链）。"
 
         logger.info(f"开始解析视频：{bvid}")
 
@@ -269,7 +126,7 @@ class BilibiliTool(FunctionTool[AstrAgentContext]):
         return f"[字幕] {title}\n\n{subtitle_text}"
 
 
-@dataclass(config={"arbitrary_types_allowed": True})
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class BilibiliReadTool(FunctionTool[AstrAgentContext]):
     name: str = "bilibili_read"
     description: str = (
@@ -312,9 +169,12 @@ class BilibiliReadTool(FunctionTool[AstrAgentContext]):
             return config_err
 
         # 2. 格式校验与规范化
-        bvid = await normalize_bvid(kwargs.get("bvid", "").strip())
+        bvid_raw = (kwargs.get("bvid") or "").strip()
+        if not bvid_raw:
+            return "请提供要解读的 B 站视频链接、BV 号或 b23.tv 短链。"
+        bvid = await normalize_bvid(bvid_raw)
         if bvid == "error":
-            return "解析b23.tv短链失败，请检查链接是否正确"
+            return "解析视频链接失败，请检查链接是否正确（支持 B 站完整链接 / BV 号 / b23.tv 短链）。"
 
         logger.info(f"[bilibili_read] 开始通读视频：{bvid}")
 
@@ -333,12 +193,6 @@ class BilibiliReadTool(FunctionTool[AstrAgentContext]):
         return f"[完整字幕] {title}\n\n{subtitle_text}"
 
 
-@register(
-    "astrbot_plugin_bilicaption",
-    "SodaCode & OMSociety",
-    "获取B站视频字幕纯文本，不做AI总结，直接返回原始字幕。",
-    "1.1.0",
-)
 class BiliCaption(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -360,10 +214,8 @@ class BiliCaption(Star):
         # 2. 提取配置项
         bilibili_cookie = plugin_config.get("bilibili_cookie", {})
 
-        # 明确语义：不再使用有歧义的 'id'，统一读取 'bili_jct'
-        # 如果用户配置了 'id'，代码逻辑上也可以尝试兼容读取，但优先使用正确键名
         sessdata = bilibili_cookie.get("sessdata", "")
-        bili_jct = bilibili_cookie.get("bili_jct", bilibili_cookie.get("id", ""))
+        bili_jct = bilibili_cookie.get("bili_jct", "")
         max_len = plugin_config.get("max_subtitle_length", 0)
         auto_send_txt = plugin_config.get("auto_send_txt", False)
         enable_read_tool = plugin_config.get("enable_read_tool", False)

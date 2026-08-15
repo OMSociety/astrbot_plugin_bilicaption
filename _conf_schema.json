@@ -1,16 +1,18 @@
 {
     "bilibili_cookie": {
         "description": "B站Cookie（非必需，但配置后可获取更高清字幕）",
-        "hint": "README有详细的获取教程，快去看看罢",
+        "hint": "README有详细的获取教程",
         "type": "object",
         "items": {
             "sessdata": {
                 "description": "sessdata",
-                "type": "string"
+                "type": "string",
+                "default": ""
             },
             "bili_jct": {
                 "description": "bili_jct",
-                "type": "string"
+                "type": "string",
+                "default": ""
             }
         }
     },
