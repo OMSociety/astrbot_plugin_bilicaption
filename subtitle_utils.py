@@ -81,7 +81,7 @@ async def resolve_b23(short_url: str) -> str:
                     if not next_url:
                         break
                     real_url = next_url
-    except aiohttp.ClientError as e:
+    except (aiohttp.ClientError, TimeoutError) as e:
         logger.warning(f"解析 b23.tv 短链网络异常：{short_url} -> {e}")
         return "error"
 
@@ -211,7 +211,7 @@ async def fetch_subtitle(bvid: str, sessdata: str, bili_jct: str) -> tuple[str, 
                     f"下载字幕文件失败，HTTP 状态码: {resp.status}"
                 )
             subtitle_json = await resp.json()
-    except aiohttp.ClientError as e:
+    except (aiohttp.ClientError, TimeoutError) as e:
         logger.error(f"网络请求异常: {e}")
         raise SubtitleFetchError("网络请求异常，请稍后重试。") from e
 

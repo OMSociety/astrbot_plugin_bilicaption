@@ -9,6 +9,8 @@ import asyncio
 import os
 import sys
 
+import aiohttp
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from subtitle_utils import (
@@ -16,6 +18,7 @@ from subtitle_utils import (
     _sanitize_filename,
     _truncate,
     normalize_bvid,
+    resolve_b23,
 )
 
 
@@ -185,3 +188,65 @@ class TestNormalizeBvid:
         # BV1b2345678x 含 "b23" 但非短链，应被识别为 BV 号
         assert asyncio.run(normalize_bvid("BV1b2345678x")) == "BV1b2345678x"
         assert calls == []
+
+
+class TestResolveB23ErrorHandling:
+    """b23 短链解析的网络异常兜底测试"""
+
+    def test_timeout_returns_error(self, monkeypatch):
+        """超时（TimeoutError）应返回 'error' 而非崩溃"""
+
+        class FakeResponse:
+            def __init__(self):
+                self.headers = {}
+
+            async def __aenter__(self):
+                raise TimeoutError("simulated timeout")
+
+            async def __aexit__(self, *args):
+                return False
+
+        class FakeSession:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args):
+                return False
+
+            def get(self, *args, **kwargs):
+                return FakeResponse()
+
+        monkeypatch.setattr("subtitle_utils.aiohttp.ClientSession", FakeSession)
+        assert asyncio.run(resolve_b23("https://b23.tv/abc")) == "error"
+
+    def test_connection_error_returns_error(self, monkeypatch):
+        """连接错误（ClientError）应返回 'error' 而非崩溃"""
+
+        class FakeResponse:
+            def __init__(self):
+                self.headers = {}
+
+            async def __aenter__(self):
+                raise aiohttp.ClientConnectionError("simulated connection error")
+
+            async def __aexit__(self, *args):
+                return False
+
+        class FakeSession:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args):
+                return False
+
+            def get(self, *args, **kwargs):
+                return FakeResponse()
+
+        monkeypatch.setattr("subtitle_utils.aiohttp.ClientSession", FakeSession)
+        assert asyncio.run(resolve_b23("https://b23.tv/abc")) == "error"
