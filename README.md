@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo.png" width="120" alt="BiliCaption Logo" />
+<img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="120" alt="BiliCaption Logo" />
 
 # 🎬 BiliCaption B站字幕提取解读
 
@@ -38,12 +38,12 @@
 ### 字幕提取 bilibili_caption
 聊天中直接发 B 站链接 / BV 号，bot 自动调用工具返回字幕纯文本：
 
-<img src="docs/caption_example.png" alt="字幕提取示例" width="480" />
+<img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/docs/caption_example.png" alt="字幕提取示例" width="480" />
 
 ### 深度解读 bilibili_read
 开启后，要求 bot 解读视频时自动通读完整字幕再组织语言：
 
-<img src="docs/read_example.png" alt="深度解读示例" width="480" />
+<img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/docs/read_example.png" alt="深度解读示例" width="480" />
 
 ### 两个工具的区别
 
