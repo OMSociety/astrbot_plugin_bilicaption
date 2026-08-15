@@ -4,3 +4,7 @@ desc: 提供获取B站视频字幕文本、解读视频内容的 LLM 工具，�
 version: 1.0.0
 author: OMSociety
 repo: https://github.com/OMSociety/astrbot_plugin_bilicaption
+tags:
+  - bilibili
+  - 字幕
+  - 提取
