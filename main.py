@@ -96,20 +96,27 @@ class _BiliToolBase(FunctionTool[AstrAgentContext]):
 
         logger.info(f"[{self.name}] 开始解析视频：{bvid}")
 
-        # 2. 获取字幕
+        # 2. 分 P 参数（可选）：LLM 可能传字符串或 None，宽松归一为 int
+        raw_page = kwargs.get("page")
+        try:
+            page = int(raw_page) if raw_page is not None else 1
+        except (TypeError, ValueError):
+            return f"分 P 参数无效：{raw_page!r}（应为从 1 开始的整数）。"
+
+        # 3. 获取字幕
         try:
             title, subtitle_text = await fetch_subtitle(
-                bvid, self.sessdata, self.bili_jct
+                bvid, self.sessdata, self.bili_jct, page=page
             )
         except SubtitleFetchError as e:
             return str(e)
 
-        # 3. 自动发送 txt 文件（如果开启）：发送完整字幕，
+        # 4. 自动发送 txt 文件（如果开启）：发送完整字幕，
         #    max_subtitle_length 截断只用于控制返回给 LLM 的上下文长度
         if self.auto_send_txt:
             await self._send_txt_file(context, title, bvid, subtitle_text)
 
-        # 4. 长度控制：防止 LLM 上下文溢出
+        # 5. 长度控制：防止 LLM 上下文溢出
         subtitle_text = _truncate(subtitle_text, self.max_subtitle_length)
 
         # 返回字幕纯文本，前附标题行
@@ -127,6 +134,11 @@ class BilibiliTool(_BiliToolBase):
                 "bvid": {
                     "type": "string",
                     "description": "想要获取的哔哩哔哩视频的BVID或是b23.tv链接，例如BV1GJ411x7h7或https://b23.tv/4bdIZBf",
+                },
+                "page": {
+                    "type": "integer",
+                    "description": "分 P 号，从 1 开始计数。单 P 视频无需传；仅当用户明确提到分 P 时才传。",
+                    "default": 1,
                 },
             },
             "required": ["bvid"],
@@ -152,6 +164,11 @@ class BilibiliReadTool(_BiliToolBase):
                 "bvid": {
                     "type": "string",
                     "description": "想要解读的哔哩哔哩视频的BVID或是b23.tv链接，例如BV1GJ411x7h7或https://b23.tv/4bdIZBf",
+                },
+                "page": {
+                    "type": "integer",
+                    "description": "分 P 号，从 1 开始计数。单 P 视频无需传；仅当用户明确提到分 P 时才传。",
+                    "default": 1,
                 },
             },
             "required": ["bvid"],
