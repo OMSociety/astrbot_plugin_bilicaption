@@ -11,12 +11,12 @@ from urllib.parse import urljoin, urlparse
 import aiohttp
 from astrbot.api import logger
 from bilibili_api import Credential, video
-from bilibili_api.exceptions import CredentialNoSessdataException
 
 # BVID 格式预编译正则：BV 开头，后接 10~12 位字母或数字
 BVID_PATTERN = re.compile(r"BV[a-zA-Z0-9]{10,12}")
 
-# b23.tv 短链域名（用于区分短链与普通链接，避免 BV 号被误判）
+# b23.tv 短链域名。b23.wtf 是第三方"去追踪参数"跳转服务、并非 B 站官方域名，
+# 有意保留以兼容粘贴该类短链的用户；其每一跳仍须过 _is_safe_b23_url 域名校验。
 B23_HOSTS = ("b23.tv", "b23.wtf")
 
 
@@ -194,11 +194,6 @@ async def fetch_subtitle(bvid: str, sessdata: str, bili_jct: str) -> tuple[str, 
 
         # 3. 获取字幕元数据
         subtitle_info = await v.get_subtitle(cid)
-    except CredentialNoSessdataException as e:
-        logger.warning(f"B 站 Cookie 无效（缺少 SESSDATA）: {bvid}")
-        raise SubtitleFetchError(
-            "B 站 Cookie 无效或已过期，请检查插件配置中的 SESSDATA 与 bili_jct。"
-        ) from e
     except aiohttp.ClientError as e:
         logger.error(f"网络请求异常: {e}")
         raise SubtitleFetchError("网络请求异常，请稍后重试。") from e
