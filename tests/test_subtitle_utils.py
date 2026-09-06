@@ -1,8 +1,10 @@
 """
 BiliCaption 核心逻辑测试
 
-直接测试 subtitle_utils.py 中的真实函数（不依赖网络与 AstrBot 环境）。
-resolve_b23 等网络环节通过 monkeypatch 桩替代。
+直接测试 subtitle_utils.py 中的真实函数（不发起真实网络请求，
+resolve_b23 等网络环节通过 monkeypatch 桩替代）。
+subtitle_utils 依赖 astrbot.api 的 logger 与 bilibili_api，
+因此运行本测试需要可导入 AstrBot 与插件依赖。
 """
 
 import asyncio
@@ -13,7 +15,7 @@ import aiohttp
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from subtitle_utils import (
+from subtitle_utils import (  # noqa: E402 - 必须在 sys.path 注入之后导入
     _clean_subtitle_text,
     _sanitize_filename,
     _truncate,
