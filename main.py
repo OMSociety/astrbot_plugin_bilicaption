@@ -14,6 +14,7 @@ from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .subtitle_utils import (
+    BvidParseError,
     SubtitleFetchError,
     _sanitize_filename,
     _truncate,
@@ -90,8 +91,9 @@ class _BiliToolBase(FunctionTool[AstrAgentContext]):
         bvid_raw = (kwargs.get("bvid") or "").strip()
         if not bvid_raw:
             return "请提供 B 站视频链接、BV 号或 b23.tv 短链。"
-        bvid = await normalize_bvid(bvid_raw)
-        if bvid == "error":
+        try:
+            bvid = await normalize_bvid(bvid_raw)
+        except BvidParseError:
             return "解析视频链接失败，请检查链接是否正确（支持 B 站完整链接 / BV 号 / b23.tv 短链）。"
 
         logger.info(f"[{self.name}] 开始解析视频：{bvid}")
