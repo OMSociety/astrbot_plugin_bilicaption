@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "display_name": "Bilibili Caption Reader",
+    "desc": "LLM tools for fetching Bilibili video subtitles and interpreting video content. Automatically recognizes Bilibili links, BV IDs, and b23 short links in messages."
+  },
+  "config": {
+    "bilibili_cookie": {
+      "description": "Bilibili Cookie (optional, but enables higher-quality subtitles)",
+      "hint": "See the README for a detailed guide.",
+      "sessdata": {
+        "description": "sessdata"
+      },
+      "bili_jct": {
+        "description": "bili_jct"
+      }
+    },
+    "max_subtitle_length": {
+      "description": "Maximum returned subtitle length (characters). 0 means no limit",
+      "hint": "Set to 0 to return the full subtitle; a larger value increases token consumption"
+    },
+    "auto_send_txt": {
+      "description": "Automatically save subtitles as a txt file and send it to the chat",
+      "hint": "When enabled, a txt file is sent to the group every time subtitles are extracted"
+    },
+    "enable_read_tool": {
+      "description": "Enable the bilibili_read in-depth interpretation tool (high token consumption)",
+      "hint": "When disabled, bilibili_read is not registered in the LLM tool list. When enabled, the bot reads the full subtitle text before summarizing whenever a user asks for a video interpretation"
+    },
+    "read_max_subtitle_length": {
+      "description": "Maximum subtitle length returned by the bilibili_read tool (characters). 0 means no limit (full read-through)",
+      "hint": "Full subtitles can be very long; set an upper bound to prevent context overflow. 0 or a very large value is recommended"
+    }
+  }
+}

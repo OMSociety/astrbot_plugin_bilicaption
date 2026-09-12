@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "display_name": "Bilibili 字幕リーダー",
+    "desc": "Bilibili 動画の字幕テキスト取得と動画内容の解読を提供する LLM ツール。メッセージ内の Bilibili リンク・BV 番号・b23 短縮リンクを自動認識します。"
+  },
+  "config": {
+    "bilibili_cookie": {
+      "description": "Bilibili Cookie（任意。設定するとより高品質な字幕を取得できます）",
+      "hint": "詳しい取得手順は README を参照してください。",
+      "sessdata": {
+        "description": "sessdata"
+      },
+      "bili_jct": {
+        "description": "bili_jct"
+      }
+    },
+    "max_subtitle_length": {
+      "description": "字幕を返す文字数の上限。0 にすると無制限になります",
+      "hint": "0 にすると字幕全体を返します。値を大きくするとトークン消費が増えます"
+    },
+    "auto_send_txt": {
+      "description": "字幕を txt ファイルとして自動保存し、チャットへ送信するかどうか",
+      "hint": "有効にすると、字幕を抽出するたびに txt ファイルをグループへ自動送信します"
+    },
+    "enable_read_tool": {
+      "description": "bilibili_read 詳細解読ツールを有効にする（トークン消費大）",
+      "hint": "無効時は bilibili_read が LLM ツール一覧に登録されません。有効時は、ユーザーが動画の解読を求めた際に bot が字幕全文を読み込んでから要約します"
+    },
+    "read_max_subtitle_length": {
+      "description": "bilibili_read ツールが返す字幕の文字数の上限。0 にすると無制限になります（全文を通読）",
+      "hint": "字幕全文は長くなる場合があるため、コンテキストのオーバーフローを防ぐために上限を設定します。0 または非常に大きな値を推奨します"
+    }
+  }
+}
