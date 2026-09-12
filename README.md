@@ -1,3 +1,5 @@
+<p align="center"><strong>中文</strong> · <a href="README_en.md">English</a> · <a href="README_ru.md">Русский</a> · <a href="README_ja.md">日本語</a></p>
+
 <div align="center">
 
 <img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="120" alt="BiliCaption Logo" />
@@ -6,7 +8,7 @@
 
 **B 站视频字幕提取与深度解读助手** —— 字幕纯文本提取 · 完整字幕通读 · 链接自动识别 · 长度可控 · txt 文件推送
 
-[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A5v4-green.svg)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/OMSociety/astrbot_plugin_bilicaption)](https://github.com/OMSociety/astrbot_plugin_bilicaption/stargazers)
@@ -95,7 +97,7 @@
 
 ### 快速配置模板
 
-在 WebUI 配置面板填写，或参考以下结构（`data/config/bilicaption_config.json`）：
+在 WebUI 配置面板填写，或参考以下结构（`data/config/astrbot_plugin_bilicaption_config.json`）：
 
 ```json
 {
@@ -149,20 +151,29 @@
 
 ## ⚠️ 常见问题
 
-**Q：需要配置吗？**
-A：**需要**。B 站字幕接口要求登录态，请配置 `bilibili_cookie.sessdata` 与 `bili_jct`（获取方式见[快速开始](#-快速开始)）。
+### Q1：需要配置吗？
 
-**Q：所有视频都能获取字幕吗？**
-A：不是。UP 主未上传字幕且 B 站无 AI 字幕的视频无法获取内容，此时会提示「暂无可用字幕」。
+**需要**。B 站字幕接口要求登录态，请配置 `bilibili_cookie.sessdata` 与 `bili_jct`（获取方式见[快速开始](#-快速开始)）。
 
-**Q：为什么不做 AI 总结？**
-A：`bilibili_caption` 定位就是原文提取。`bilibili_read` 则是把总结权交给 bot 自身，不预制提示词。
+### Q2：所有视频都能获取字幕吗？
 
-**Q：`bilibili_caption` 和 `bilibili_read` 有什么区别？**
-A：caption 快速返回字幕文本让你看；read 把全文喂给 bot 让 bot 自己通读再输出解读。read 费 token 但解读质量更高。两者互不替代，可按需配置开关。
+不是。UP 主未上传字幕且 B 站无 AI 字幕的视频无法获取内容，此时会提示「暂无可用字幕」。
 
-**Q：跟 BiliRead 有什么区别？**
-A：BiliRead 调用第三方 LLM 总结字幕；本插件跳过第三方 LLM，直接返回字幕原文，或利用当前对话的 bot 自身做解读。
+### Q3：为什么不做 AI 总结？
+
+`bilibili_caption` 定位就是原文提取。`bilibili_read` 则是把总结权交给 bot 自身，不预制提示词。
+
+### Q4：`bilibili_caption` 和 `bilibili_read` 有什么区别？
+
+caption 快速返回字幕文本让你看；read 把全文喂给 bot 让 bot 自己通读再输出解读。read 费 token 但解读质量更高。两者互不替代，可按需配置开关。
+
+### Q5：跟 BiliRead 有什么区别？
+
+BiliRead 调用第三方 LLM 总结字幕；本插件跳过第三方 LLM，直接返回字幕原文，或利用当前对话的 bot 自身做解读。
+
+## 📝 更新日志
+
+> 📋 **[查看更新日志 →](CHANGELOG.md)**
 
 ---
 
