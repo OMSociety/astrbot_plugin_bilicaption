@@ -95,7 +95,7 @@
 
 ### クイック設定テンプレート
 
-WebUI の設定パネルに入力するか、次の構造を参考にしてください（`data/config/astrbot_plugin_bilicaption_config.json`：
+WebUI の設定パネルに入力するか、次の構造を参考にしてください（`data/config/astrbot_plugin_bilicaption_config.json`）：
 
 ```json
 {
