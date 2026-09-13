@@ -100,8 +100,8 @@ WebUI の設定パネルに入力するか、次の構造を参考にしてく�
 ```json
 {
   "bilibili_cookie": {
-    "sessdata": "你的SESSDATA",
-    "bili_jct": "你的bili_jct"
+    "sessdata": "YOUR_SESSDATA",
+    "bili_jct": "YOUR_BILI_JCT"
   },
   "max_subtitle_length": 0,
   "auto_send_txt": false,
@@ -117,14 +117,14 @@ WebUI の設定パネルに入力するか、次の構造を参考にしてく�
 プラグインは 2 つの LLM ツールを登録します（`bilibili_read` には設定 `enable_read_tool` の有効化が必要）。モデルが呼び出しタイミングを自動で判断するため、自然な言葉で要求するだけです：
 
 ```
-用户: 帮我提取这个视频的字幕 https://b23.tv/4bdIZBf
+ユーザー: この動画の字幕を抽出して https://b23.tv/4bdIZBf
 🤖 → bilibili_caption(bvid=https://b23.tv/4bdIZBf)
-    [字幕] 《人工智能发展简史：从图灵到 GPT》
-    大家好，欢迎来到本期视频...
+    [字幕] 「AI 発展略史：チューリングから GPT へ」
+    皆さんこんにちは、今回の動画へようこそ...
 
-用户: 解读一下这个视频 BV1GJ411x7h7
+ユーザー: この動画 BV1GJ411x7h7 を解読して
 🤖 → bilibili_read(bvid=BV1GJ411x7h7)
-    （通读完整字幕后自行组织语言输出解读）
+    （字幕全文を通読した上で、bot が自ら解読を出力）
 ```
 
 ### bilibili_caption

@@ -100,8 +100,8 @@ Fill in the settings via the WebUI configuration panel, or refer to the followin
 ```json
 {
   "bilibili_cookie": {
-    "sessdata": "你的SESSDATA",
-    "bili_jct": "你的bili_jct"
+    "sessdata": "YOUR_SESSDATA",
+    "bili_jct": "YOUR_BILI_JCT"
   },
   "max_subtitle_length": 0,
   "auto_send_txt": false,
@@ -117,14 +117,14 @@ Fill in the settings via the WebUI configuration panel, or refer to the followin
 The plugin registers 2 LLM tools (`bilibili_read` requires enabling the `enable_read_tool` option). The model decides on its own when to call them; just state your request in natural language:
 
 ```
-用户: 帮我提取这个视频的字幕 https://b23.tv/4bdIZBf
+User: Extract the subtitles for this video https://b23.tv/4bdIZBf
 🤖 → bilibili_caption(bvid=https://b23.tv/4bdIZBf)
-    [字幕] 《人工智能发展简史：从图灵到 GPT》
-    大家好，欢迎来到本期视频...
+    [Subtitles] "A Brief History of AI: From Turing to GPT"
+    Hello everyone, and welcome to this video...
 
-用户: 解读一下这个视频 BV1GJ411x7h7
+User: Walk me through this video BV1GJ411x7h7
 🤖 → bilibili_read(bvid=BV1GJ411x7h7)
-    （通读完整字幕后自行组织语言输出解读）
+    (Reads through the full subtitles, then composes its own interpretation)
 ```
 
 ### bilibili_caption

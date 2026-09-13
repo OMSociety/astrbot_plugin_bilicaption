@@ -100,8 +100,8 @@
 ```json
 {
   "bilibili_cookie": {
-    "sessdata": "你的SESSDATA",
-    "bili_jct": "你的bili_jct"
+    "sessdata": "YOUR_SESSDATA",
+    "bili_jct": "YOUR_BILI_JCT"
   },
   "max_subtitle_length": 0,
   "auto_send_txt": false,
@@ -117,14 +117,14 @@
 Плагин регистрирует 2 инструмента LLM (`bilibili_read` требует включённого параметра `enable_read_tool`). Модель сама решает, когда их вызвать, — просто сформулируйте запрос естественным языком:
 
 ```
-用户: 帮我提取这个视频的字幕 https://b23.tv/4bdIZBf
+Пользователь: Извлеки субтитры этого видео https://b23.tv/4bdIZBf
 🤖 → bilibili_caption(bvid=https://b23.tv/4bdIZBf)
-    [字幕] 《人工智能发展简史：从图灵到 GPT》
-    大家好，欢迎来到本期视频...
+    [Субтитры] «Краткая история ИИ: от Тьюринга до GPT»
+    Всем привет, добро пожаловать в это видео...
 
-用户: 解读一下这个视频 BV1GJ411x7h7
+Пользователь: Разбери это видео BV1GJ411x7h7
 🤖 → bilibili_read(bvid=BV1GJ411x7h7)
-    （通读完整字幕后自行组织语言输出解读）
+    (Полностью читает субтитры, затем самостоятельно формулирует разбор)
 ```
 
 ### bilibili_caption
