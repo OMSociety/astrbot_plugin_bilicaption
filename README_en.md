@@ -4,7 +4,7 @@
 
 <img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="120" alt="BiliCaption Logo" />
 
-# 🎬 BiliCaption bilibili Subtitle Extraction & Reading
+# BiliCaption bilibili Subtitle Extraction & Reading
 
 **bilibili video subtitle extraction and in-depth reading assistant** —— Plain-text subtitle extraction · Full transcript reading · Automatic link detection · Controllable length · txt file delivery
 
@@ -16,24 +16,24 @@
 
 </div>
 
-> 🎨 This project was written by AI · Source code is a fork of [SodaCodeSave/astrbot_plugin_biliread](https://github.com/SodaCodeSave/astrbot_plugin_biliread)
+> This project was written by AI · Source code is a fork of [SodaCodeSave/astrbot_plugin_biliread](https://github.com/SodaCodeSave/astrbot_plugin_biliread)
 
 ---
 
-## ✨ Core Features
+## Core Features
 
 | Feature | Description |
 |------|------|
-| 📝 **Plain-text subtitle extraction** | Extracts the original subtitles of bilibili videos without AI summarization and returns them directly to the user |
-| 🧠 **In-depth subtitle reading** | Feeds the full subtitles to the bot itself so it can interpret / summarize the video content (optional, high token usage) |
-| 🔗 **Smart link detection** | Supports full bilibili links / BV IDs / b23.tv short links / bare short codes with automatic parsing |
-| ✂️ **Length control** | The maximum returned subtitle length can be configured separately for each tool to prevent context overflow |
-| 📄 **txt file delivery** | Optionally saves the full subtitles as a txt file and sends it to the chat |
-| 🔒 **Login state support** | Full AI subtitles can be fetched after configuring bilibili Cookies (the subtitle API requires a logged-in state) |
+| **Plain-text subtitle extraction** | Extracts the original subtitles of bilibili videos without AI summarization and returns them directly to the user |
+| **In-depth subtitle reading** | Feeds the full subtitles to the bot itself so it can interpret / summarize the video content (optional, high token usage) |
+| **Smart link detection** | Supports full bilibili links / BV IDs / b23.tv short links / bare short codes with automatic parsing |
+| **Length control** | The maximum returned subtitle length can be configured separately for each tool to prevent context overflow |
+| **txt file delivery** | Optionally saves the full subtitles as a txt file and sends it to the chat |
+| **Login state support** | Full AI subtitles can be fetched after configuring bilibili Cookies (the subtitle API requires a logged-in state) |
 
 ---
 
-## 📖 Feature Overview
+## Feature Overview
 
 ### Subtitle extraction bilibili_caption
 Send a bilibili link / BV ID directly in the chat, and the bot automatically calls the tool to return the plain-text subtitles.
@@ -48,26 +48,21 @@ When enabled, whenever you ask the bot to interpret a video it first reads throu
 | Positioning | Quickly extracts the original subtitle text | In-depth interpretation for the bot's own reading |
 | Returns | Subtitle text for the AI to show the user | Full subtitles fed into the bot's reasoning |
 | Token usage | Controllable (can be truncated) | Relatively high (reads the full text by default) |
-| Enabled by default | ✅ Always available | ❌ Off by default; must be enabled in the configuration |
+| Enabled by default | Always available | Off by default; must be enabled in the configuration |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Step 1: Installation
 
-**Method 1: Plugin marketplace**
-- AstrBot WebUI → Plugin Marketplace → search for `bilicaption`
+AstrBot WebUI → Plugin Marketplace → search for `bilicaption`
 
-**Method 2: GitHub repository**
-- AstrBot WebUI → Plugin Management → ＋ Install
-- Paste the repository URL: `https://github.com/OMSociety/astrbot_plugin_bilicaption`
-
-> 💡 Dependencies (bilibili-api-python / aiohttp / aiofiles) are installed automatically from `requirements.txt` when the plugin is installed; no manual installation is required.
+> **Note:** Dependencies (bilibili-api-python / aiohttp / aiofiles) are installed automatically from `requirements.txt` when the plugin is installed; no manual installation is required.
 
 ### Step 2: Configure bilibili Cookies (required)
 
-> 💡 The bilibili subtitle API requires a logged-in state, and **subtitles cannot be fetched without configuring Cookies** (AI subtitles are hidden from anonymous users). Configure them before use.
+> **Note:** The bilibili subtitle API requires a logged-in state, and **subtitles cannot be fetched without configuring Cookies** (AI subtitles are hidden from anonymous users). Configure them before use.
 
 Fill in the `bilibili_cookie` group of the plugin configuration:
 
@@ -82,7 +77,7 @@ After configuring, reload the plugin in the WebUI (or restart AstrBot), then sen
 
 ---
 
-## ⚙️ Configuration Options
+## Configuration Options
 
 | Option | Type | Default | Description |
 |:------|:-----|:-------|:-----|
@@ -112,7 +107,7 @@ Fill in the settings via the WebUI configuration panel, or refer to the followin
 
 ---
 
-## 🛠️ LLM-Callable Tools
+## LLM-Callable Tools
 
 The plugin registers 2 LLM tools (`bilibili_read` requires enabling the `enable_read_tool` option). The model decides on its own when to call them; just state your request in natural language:
 
@@ -132,26 +127,26 @@ Returns the plain-text subtitles of a bilibili video. If the video has no subtit
 
 | Parameter | Type | Required | Description |
 |:----|:----|:----:|:-----|
-| `bvid` | string | ✅ | BVID / full bilibili link / b23.tv short link, e.g. `BV1GJ411x7h7` or `https://b23.tv/4bdIZBf` |
-| `page` | integer | ❌ | Part number, starting from 1, default 1. Not needed for single-part videos |
+| `bvid` | string | Yes | BVID / full bilibili link / b23.tv short link, e.g. `BV1GJ411x7h7` or `https://b23.tv/4bdIZBf` |
+| `page` | integer | No | Part number, starting from 1, default 1. Not needed for single-part videos |
 
 ### bilibili_read (requires enabling the `enable_read_tool` option)
 Reads through the full subtitles of a bilibili video so the bot can interpret its content. Called when the user asks to summarize, analyze, or evaluate a bilibili video.
 
 | Parameter | Type | Required | Description |
 |:----|:----|:----:|:-----|
-| `bvid` | string | ✅ | BVID / full bilibili link / b23.tv short link |
-| `page` | integer | ❌ | Part number, starting from 1, default 1. Not needed for single-part videos |
+| `bvid` | string | Yes | BVID / full bilibili link / b23.tv short link |
+| `page` | integer | No | Part number, starting from 1, default 1. Not needed for single-part videos |
 
-> Note: `bilibili_read` returns the full original subtitles without adding any preset prompts. The bot reads them itself and decides how to interpret the video.
+> **Note:** `bilibili_read` returns the full original subtitles without adding any preset prompts. The bot reads them itself and decides how to interpret the video.
 
 ---
 
-## ⚠️ FAQ
+## FAQ
 
 ### Q1: Does it require configuration?
 
-**Yes**. The bilibili subtitle API requires a logged-in state; configure `bilibili_cookie.sessdata` and `bili_jct` (see [Quick Start](#-quick-start)).
+**Yes**. The bilibili subtitle API requires a logged-in state; configure `bilibili_cookie.sessdata` and `bili_jct` (see [Quick Start](#quick-start)).
 
 ### Q2: Can subtitles be fetched for every video?
 
@@ -169,29 +164,19 @@ caption quickly returns the subtitle text for you to read; read feeds the full t
 
 BiliRead calls a third-party LLM to summarize subtitles; this plugin skips the third-party LLM and either returns the original subtitles directly or uses the current bot itself for interpretation.
 
-## 📝 Changelog
+## Changelog
 
-> 📋 **[View changelog →](CHANGELOG.md)**
+> **[View changelog →](CHANGELOG.md)**
 
----
+## Support & Acknowledgements
 
-## ⭐ Support This Project
-
-If this plugin helps you, please consider giving it a Star ⭐. For issues and suggestions, open an [Issue](https://github.com/OMSociety/astrbot_plugin_bilicaption/issues) or a [Pull Request](https://github.com/OMSociety/astrbot_plugin_bilicaption/pulls).
-
-## 🙏 Acknowledgements
+If this plugin helps you, please consider giving it a Star. For issues and suggestions, open an [Issue](https://github.com/OMSociety/astrbot_plugin_bilicaption/issues) or a [Pull Request](https://github.com/OMSociety/astrbot_plugin_bilicaption/pulls).
 
 - [AstrBot](https://github.com/AstrBotDevs/AstrBot) open-source chatbot framework
 - [SodaCodeSave/astrbot_plugin_biliread](https://github.com/SodaCodeSave/astrbot_plugin_biliread) upstream plugin (AGPL-3.0)
 
----
-
-## 📜 License
+## License & Author
 
 This project is licensed under **AGPL-3.0** (inherited from the upstream BiliRead).
-
----
-
-## 👤 Author
 
 [@OMSociety](https://github.com/OMSociety)

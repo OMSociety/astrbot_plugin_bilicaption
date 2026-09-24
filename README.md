@@ -4,7 +4,7 @@
 
 <img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="120" alt="BiliCaption Logo" />
 
-# 🎬 BiliCaption B站字幕提取解读
+# BiliCaption B站字幕提取解读
 
 **B 站视频字幕提取与深度解读助手** —— 字幕纯文本提取 · 完整字幕通读 · 链接自动识别 · 长度可控 · txt 文件推送
 
@@ -14,28 +14,28 @@
 [![Stars](https://img.shields.io/github/stars/OMSociety/astrbot_plugin_bilicaption)](https://github.com/OMSociety/astrbot_plugin_bilicaption/stargazers)
 [![Issues](https://img.shields.io/github/issues/OMSociety/astrbot_plugin_bilicaption)](https://github.com/OMSociety/astrbot_plugin_bilicaption/issues)
 
-[✨ 核心特性](#-核心特性) • [📖 功能概览](#-功能概览) • [🚀 快速开始](#-快速开始) • [⚙️ 配置项说明](#️-配置项说明) • [🛠️ LLM 可调用工具](#️-llm-可调用工具) • [⚠️ 常见问题](#️-常见问题) • [📝 更新日志](CHANGELOG.md)
+[核心特性](#核心特性) • [功能概览](#功能概览) • [快速开始](#快速开始) • [配置项说明](#配置项说明) • [LLM 可调用工具](#llm-可调用工具) • [常见问题](#常见问题) • [更新日志](CHANGELOG.md)
 
 </div>
 
-> 🎨 本项目由 AI 编写 · 源码基于 [SodaCodeSave/astrbot_plugin_biliread](https://github.com/SodaCodeSave/astrbot_plugin_biliread) 二次开发
+> 本项目由 AI 编写 · 源码基于 [SodaCodeSave/astrbot_plugin_biliread](https://github.com/SodaCodeSave/astrbot_plugin_biliread) 二次开发
 
 ---
 
-## ✨ 核心特性
+## 核心特性
 
 | 特性 | 说明 |
 |------|------|
-| 📝 **字幕纯文本提取** | 提取 B 站视频字幕原文，不做 AI 总结，直接返回给用户 |
-| 🧠 **深度字幕通读** | 完整字幕喂给 bot 自身，由 bot 自行解读 / 总结视频内容（可选，高 token 消耗） |
-| 🔗 **链接智能识别** | 支持 B 站完整链接 / BV 号 / b23.tv 短链 / 裸短码，自动识别解析 |
-| ✂️ **长度控制** | 两个工具可分别配置字幕最大返回长度，防止上下文溢出 |
-| 📄 **txt 文件推送** | 可选将完整字幕保存为 txt 文件发送到聊天 |
-| 🔒 **登录态支持** | 配置 B 站 Cookie 后获取完整 AI 字幕（字幕接口需要登录态） |
+| **字幕纯文本提取** | 提取 B 站视频字幕原文，不做 AI 总结，直接返回给用户 |
+| **深度字幕通读** | 完整字幕喂给 bot 自身，由 bot 自行解读 / 总结视频内容（可选，高 token 消耗） |
+| **链接智能识别** | 支持 B 站完整链接 / BV 号 / b23.tv 短链 / 裸短码，自动识别解析 |
+| **长度控制** | 两个工具可分别配置字幕最大返回长度，防止上下文溢出 |
+| **txt 文件推送** | 可选将完整字幕保存为 txt 文件发送到聊天 |
+| **登录态支持** | 配置 B 站 Cookie 后获取完整 AI 字幕（字幕接口需要登录态） |
 
 ---
 
-## 📖 功能概览
+## 功能概览
 
 ### 字幕提取 bilibili_caption
 聊天中直接发 B 站链接 / BV 号，bot 自动调用工具返回字幕纯文本。
@@ -50,26 +50,21 @@
 | 定位 | 快速提取字幕原文 | 为 bot 自身阅读做深度解读 |
 | 返回 | 字幕文本，供 AI 展示给用户 | 完整字幕，喂入 bot 思考流 |
 | token 消耗 | 可控（可截断） | 较高（默认全文通读） |
-| 是否默认启用 | ✅ 始终可用 | ❌ 默认关闭，需开启配置 |
+| 是否默认启用 | 始终可用 | 默认关闭，需开启配置 |
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
 ### 第一步：安装
 
-**方式一：插件市场**
-- AstrBot WebUI → 插件市场 → 搜索 `bilicaption`
+AstrBot WebUI → 插件市场 → 搜索 `bilicaption`
 
-**方式二：GitHub 仓库**
-- AstrBot WebUI → 插件管理 → ＋ 安装
-- 粘贴仓库地址：`https://github.com/OMSociety/astrbot_plugin_bilicaption`
-
-> 💡 插件安装时会自动读取 `requirements.txt` 安装依赖（bilibili-api-python / aiohttp / aiofiles），无需手动安装。
+> **提示：**插件安装时会自动读取 `requirements.txt` 安装依赖（bilibili-api-python / aiohttp / aiofiles），无需手动安装。
 
 ### 第二步：配置 B 站 Cookie（必需）
 
-> 💡 B 站字幕接口需要登录态，**不配置 Cookie 无法获取字幕**（AI 字幕对匿名用户隐藏）。请先配置再使用。
+> **提示：**B 站字幕接口需要登录态，**不配置 Cookie 无法获取字幕**（AI 字幕对匿名用户隐藏）。请先配置再使用。
 
 在插件配置的 `bilibili_cookie` 分组中填写：
 
@@ -84,7 +79,7 @@
 
 ---
 
-## ⚙️ 配置项说明
+## 配置项说明
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |:------|:-----|:-------|:-----|
@@ -114,7 +109,7 @@
 
 ---
 
-## 🛠️ LLM 可调用工具
+## LLM 可调用工具
 
 插件注册 2 个 LLM 工具（`bilibili_read` 需开启配置 `enable_read_tool`），模型会自动判断何时调用，你只需用自然语言说需求：
 
@@ -134,26 +129,26 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |:----|:----|:----:|:-----|
-| `bvid` | string | ✅ | BVID / B 站完整链接 / b23.tv 短链，例如 `BV1GJ411x7h7` 或 `https://b23.tv/4bdIZBf` |
-| `page` | integer | ❌ | 分 P 号，从 1 开始，默认 1。单 P 视频无需传 |
+| `bvid` | string | 是 | BVID / B 站完整链接 / b23.tv 短链，例如 `BV1GJ411x7h7` 或 `https://b23.tv/4bdIZBf` |
+| `page` | integer | 否 | 分 P 号，从 1 开始，默认 1。单 P 视频无需传 |
 
 ### bilibili_read（需开启配置 `enable_read_tool`）
 通读哔哩哔哩视频的完整字幕以便 bot 解读视频内容。当用户要求总结、分析、评价某个 B 站视频时调用。
 
 | 参数 | 类型 | 必填 | 说明 |
 |:----|:----|:----:|:-----|
-| `bvid` | string | ✅ | BVID / B 站完整链接 / b23.tv 短链 |
-| `page` | integer | ❌ | 分 P 号，从 1 开始，默认 1。单 P 视频无需传 |
+| `bvid` | string | 是 | BVID / B 站完整链接 / b23.tv 短链 |
+| `page` | integer | 否 | 分 P 号，从 1 开始，默认 1。单 P 视频无需传 |
 
-> 注意：`bilibili_read` 返回完整字幕原文，不附加任何预制提示词。由 bot 自行阅读后决定如何解读。
+> **注意：**`bilibili_read` 返回完整字幕原文，不附加任何预制提示词。由 bot 自行阅读后决定如何解读。
 
 ---
 
-## ⚠️ 常见问题
+## 常见问题
 
 ### Q1：需要配置吗？
 
-**需要**。B 站字幕接口要求登录态，请配置 `bilibili_cookie.sessdata` 与 `bili_jct`（获取方式见[快速开始](#-快速开始)）。
+**需要**。B 站字幕接口要求登录态，请配置 `bilibili_cookie.sessdata` 与 `bili_jct`（获取方式见[快速开始](#快速开始)）。
 
 ### Q2：所有视频都能获取字幕吗？
 
@@ -171,29 +166,19 @@ caption 快速返回字幕文本让你看；read 把全文喂给 bot 让 bot 自
 
 BiliRead 调用第三方 LLM 总结字幕；本插件跳过第三方 LLM，直接返回字幕原文，或利用当前对话的 bot 自身做解读。
 
-## 📝 更新日志
+## 更新日志
 
-> 📋 **[查看更新日志 →](CHANGELOG.md)**
+> **[查看更新日志 →](CHANGELOG.md)**
 
----
+## 支持与致谢
 
-## ⭐ 支持本项目
-
-如果这个插件对你有帮助，欢迎点亮 Star ⭐，有问题和建议请提交 [Issue](https://github.com/OMSociety/astrbot_plugin_bilicaption/issues) 或 [Pull Request](https://github.com/OMSociety/astrbot_plugin_bilicaption/pulls)。
-
-## 🙏 致谢
+如果这个插件对你有帮助，欢迎点亮 Star，有问题和建议请提交 [Issue](https://github.com/OMSociety/astrbot_plugin_bilicaption/issues) 或 [Pull Request](https://github.com/OMSociety/astrbot_plugin_bilicaption/pulls)。
 
 - [AstrBot](https://github.com/AstrBotDevs/AstrBot) 开源聊天机器人框架
 - [SodaCodeSave/astrbot_plugin_biliread](https://github.com/SodaCodeSave/astrbot_plugin_biliread) 上游插件（AGPL-3.0）
 
----
-
-## 📜 许可证
+## 许可证与作者
 
 本项目采用 **AGPL-3.0** 开源协议（继承上游 BiliRead）。
-
----
-
-## 👤 作者
 
 [@OMSociety](https://github.com/OMSociety)
