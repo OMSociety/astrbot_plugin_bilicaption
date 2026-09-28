@@ -1,24 +1,34 @@
 # Changelog
 
-本项目所有重要更改都会记录在此文件。
+本项目的更改记录在此文件。
+
+All notable changes to this project are documented in this file.
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)；
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [1.1.0] - 2026-09-13
 
-### 新增 (Added)
+### 新增
 
 - **WebUI 四语本地化**：新增 `zh-CN` / `en-US` / `ru-RU` / `ja-JP` 四份 i18n 文件（`.astrbot-plugin/i18n/`），插件名、简介与全部配置项文案在四种界面语言下均正确显示；中文文案与配置 schema 保持逐字镜像。
 - README 新增多语言版本（English / Русский / 日本語），顶部提供语言导航。
 
+### Added
+
+- **Four-language WebUI localization**: four i18n files were added (`zh-CN` / `en-US` / `ru-RU` / `ja-JP`, under `.astrbot-plugin/i18n/`), so the plugin name, description, and all configuration item texts display correctly in the four interface languages; the Chinese texts mirror the configuration schema verbatim.
+- The README gained multilingual versions (English / Русский / 日本語), with language navigation at the top.
+
 ## [1.0.3] - 2026-09-07
 
-### 修复 (Fixed)
+### 修复
 
 - 字幕下载异常日志脱敏：网络异常对象经 `ClientResponseError.__str__` 输出时会把含签名的完整字幕 URL 写进日志，现改为只记录异常消息，防止签名泄露到日志。
 
-### 变更 (Changed)
+### 变更
 
 - b23.tv 短链解析逐跳优化：重定向链中任一跳的 URL 已含 BV 号即提前返回，不再继续请求最终视频页面；短链域名改用 urlparse 按 hostname 精确判断（原先的子串匹配会把路径中偶然含 "b23" 的链接误路由进短链解析）。
 - 链接解析失败改为抛出 `BvidParseError` 异常（原先以返回值 `"error"` 作为失败信号），对用户的错误提示保持不变。
@@ -26,18 +36,18 @@
 
 ## [1.0.2] - 2026-09-07
 
-### 新增 (Added)
+### 新增
 
 - **多分 P 视频字幕支持**：`bilibili_caption` / `bilibili_read` 新增可选参数 `page`（分 P 号，从 1 开始计数，默认 1），可获取多分 P 视频指定分 P 的字幕；多分 P 视频的返回标题行标注分 P（如 `[字幕] 标题 (P2)`），单 P 视频保持原样。分 P 越界时返回友好提示（如「视频《…》没有第 3 个分 P（共 2 个分 P）」）。
 - 新增分 P 参数透传与越界拒绝回归测试（23 → 27 用例）。
 
 ## [1.0.1] - 2026-09-06
 
-### 修复 (Fixed)
+### 修复
 
 - 开启「自动发送 txt」时，txt 文件现在包含完整字幕（此前发送的是截断后的文本）；字幕临时文件发送后即清理，不再堆积在系统临时目录。
 
-### 变更 (Changed)
+### 变更
 
 - 依赖 `bilibili-api-python` 锁定上限版本 `<18`，避免上游大版本破坏性变更导致插件静默失效。
 - 移除永不生效的防御分支与空生命周期钩子，两个字幕工具合并为公共基类实现（行为不变）。
