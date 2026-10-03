@@ -58,11 +58,11 @@ When enabled, whenever you ask the bot to interpret a video it first reads throu
 
 AstrBot WebUI → Plugin Marketplace → search for `bilicaption`
 
-> **Note:** Dependencies (bilibili-api-python / aiohttp / aiofiles) are installed automatically from `requirements.txt` when the plugin is installed; no manual installation is required.
+> **Note**: Dependencies (bilibili-api-python / aiohttp / aiofiles) are installed automatically from `requirements.txt` when the plugin is installed; no manual installation is required.
 
 ### Step 2: Configure bilibili Cookies (required)
 
-> **Note:** The bilibili subtitle API requires a logged-in state, and **subtitles cannot be fetched without configuring Cookies** (AI subtitles are hidden from anonymous users). Configure them before use.
+> **Note**: The bilibili subtitle API requires a logged-in state, and **subtitles cannot be fetched without configuring Cookies** (AI subtitles are hidden from anonymous users). Configure them before use.
 
 Fill in the `bilibili_cookie` group of the plugin configuration:
 
@@ -138,7 +138,7 @@ Reads through the full subtitles of a bilibili video so the bot can interpret it
 | `bvid` | string | Yes | BVID / full bilibili link / b23.tv short link |
 | `page` | integer | No | Part number, starting from 1, default 1. Not needed for single-part videos |
 
-> **Note:** `bilibili_read` returns the full original subtitles without adding any preset prompts. The bot reads them itself and decides how to interpret the video.
+> **Note**: `bilibili_read` returns the full original subtitles without adding any preset prompts. The bot reads them itself and decides how to interpret the video.
 
 ---
 
