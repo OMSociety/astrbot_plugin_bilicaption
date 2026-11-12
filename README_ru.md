@@ -2,9 +2,7 @@
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="120" alt="BiliCaption Logo" />
-
-# BiliCaption Извлечение и разбор субтитров bilibili
+<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption Извлечение и разбор субтитров bilibili</h1>
 
 **Помощник по извлечению и глубокому разбору субтитров видео bilibili** —— извлечение чистого текста субтитров · полное прочтение субтитров · автоопределение ссылок · управление длиной · отправка файла txt
 

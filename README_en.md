@@ -2,9 +2,7 @@
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="120" alt="BiliCaption Logo" />
-
-# BiliCaption bilibili Subtitle Extraction & Reading
+<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili Subtitle Extraction & Reading</h1>
 
 **bilibili video subtitle extraction and in-depth reading assistant** —— Plain-text subtitle extraction · Full transcript reading · Automatic link detection · Controllable length · txt file delivery
 

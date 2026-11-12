@@ -2,9 +2,7 @@
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="120" alt="BiliCaption Logo" />
-
-# BiliCaption bilibili 字幕抽出・解読
+<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili 字幕抽出・解読</h1>
 
 **bilibili 動画の字幕抽出と深掘り解読アシスタント** —— 字幕テキスト抽出 · 字幕全文通読 · リンク自動判別 · 長さ制御 · txt ファイル送信
 
