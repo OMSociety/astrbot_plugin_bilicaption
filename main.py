@@ -10,213 +10,175 @@ from astrbot.core.agent.tool import FunctionTool
 from astrbot.core.astr_agent_context import AstrAgentContext
 from astrbot.core.message.components import File as FileComponent
 from astrbot.core.message.components import Plain
+from bilibili_api import Credential
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .subtitle_utils import (
-    BvidParseError,
+    SubtitleCache,
     SubtitleFetchError,
     _sanitize_filename,
-    _truncate,
-    fetch_subtitle,
-    normalize_bvid,
+    load_subtitle,
+    render_view,
 )
+
+_VIDEO_PARAM = {
+    "type": "string",
+    "description": "B 站视频的 BV 号、av 号、完整链接、b23.tv 短链或包含它们的分享文本",
+}
+_PAGE_PARAM = {
+    "type": "integer",
+    "description": "分 P 号，从 1 开始计数；仅当用户明确提到分 P 时才传。",
+}
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class _BiliToolBase(FunctionTool[AstrAgentContext]):
-    """bilibili 字幕类工具的公共基类：链接解析 → 字幕获取 → 截断/发文件。"""
+    """B 站字幕工具公共基类：登录凭据、缓存与参数归一。"""
 
     name: str = ""
     description: str = ""
     parameters: dict = Field(default_factory=dict)
 
-    # 配置参数
-    sessdata: str = ""
-    bili_jct: str = ""
-    # 字幕最大长度限制（0 表示不截断）
-    max_subtitle_length: int = 0
-    # 是否自动发送 txt 文件到聊天
+    credential: Credential | None = None
+    cache: SubtitleCache = Field(default_factory=lambda: SubtitleCache(0, 0))
+
+    @staticmethod
+    def _int_arg(kwargs: dict, key: str) -> int | None:
+        raw = kwargs.get(key)
+        if raw is None:
+            return None
+        try:
+            return int(raw)
+        except (TypeError, ValueError) as e:
+            raise SubtitleFetchError(f"{key} 必须是整数。") from e
+
+
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+class BiliViewTool(_BiliToolBase):
+    name: str = "bili_view"
+    description: str = (
+        "读取哔哩哔哩视频的字幕，用于理解、总结、评价或回答关于视频内容的问题。"
+        "支持 BV 号、av 号、完整视频链接、b23.tv / bili2233.cn 短链以及分享文本。"
+        "字幕过长时只返回开头与结尾，并在结果里给出 offset，用它继续读取中间部分。"
+        "如果用户要的是字幕文本或字幕文件本身，请改用 bili_caption。"
+    )
+    parameters: dict = Field(
+        default_factory=lambda: {
+            "type": "object",
+            "properties": {
+                "video": _VIDEO_PARAM,
+                "page": _PAGE_PARAM,
+                "offset": {
+                    "type": "integer",
+                    "description": "从该字符位置起继续读取；仅在上次结果提示可继续读取时传。",
+                },
+            },
+            "required": ["video"],
+        }
+    )
+    max_chars: int = 20000
+
+    async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> str:
+        try:
+            page = self._int_arg(kwargs, "page")
+            offset = self._int_arg(kwargs, "offset")
+            result = await load_subtitle(
+                kwargs.get("video") or "", page, self.credential, self.cache
+            )
+            return render_view(result.title, result.text, self.max_chars, offset)
+        except SubtitleFetchError as e:
+            return str(e)
+
+
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+class BiliCaptionTool(_BiliToolBase):
+    name: str = "bili_caption"
+    description: str = (
+        "获取哔哩哔哩视频的字幕原文（不限长度）。"
+        "当用户要字幕文本或字幕文件时使用；"
+        "如果用户想让你理解、总结、评价或回答视频内容，请改用 bili_view。"
+    )
+    parameters: dict = Field(
+        default_factory=lambda: {
+            "type": "object",
+            "properties": {"video": _VIDEO_PARAM, "page": _PAGE_PARAM},
+            "required": ["video"],
+        }
+    )
     auto_send_txt: bool = False
-    # 返回文本前缀，子类覆写
-    result_prefix: str = "[字幕]"
 
     async def _send_txt_file(
         self,
         context: ContextWrapper[AstrAgentContext],
         title: str,
-        bvid: str,
         content: str,
     ) -> None:
-        """将字幕内容保存为 txt 文件并发送到当前会话。"""
+        """将字幕保存为 txt 文件并发送到当前会话。"""
+        safe_title = _sanitize_filename(title)
+        filepath = os.path.join(
+            tempfile.gettempdir(), f"{safe_title}_{os.getpid()}.txt"
+        )
         try:
-            # 创建临时文件
-            safe_title = _sanitize_filename(title)
-            tmp_dir = tempfile.gettempdir()
-            filepath = os.path.join(tmp_dir, f"{safe_title}_{bvid}.txt")
-
-            # 写入文件（异步写，避免阻塞事件循环）
             async with aiofiles.open(filepath, "w", encoding="utf-8") as f:
-                await f.write(f"标题: {title}\nBVID: {bvid}\n{'=' * 40}\n\n{content}")
-
-            logger.info(f"字幕已保存至: {filepath}")
-
-            # 发送文件到当前会话
+                await f.write(f"标题: {title}\n{'=' * 40}\n\n{content}")
             agent_ctx = context.context
-            session = agent_ctx.event.unified_msg_origin
             await agent_ctx.context.send_message(
-                session,
+                agent_ctx.event.unified_msg_origin,
                 MessageChain(
                     [
-                        FileComponent(
-                            name=f"{safe_title}.txt",
-                            file=filepath,
-                        ),
+                        FileComponent(name=f"{safe_title}.txt", file=filepath),
                         Plain(text=f"已发送视频《{title}》的字幕文件"),
                     ]
                 ),
             )
-        except Exception as e:  # noqa: BLE001 - 兜底保护：发送失败只记日志，不影响主流程
+        except Exception as e:  # noqa: BLE001 - 发送失败只记日志，字幕仍返回给 LLM
             logger.error(f"发送字幕文件失败: {e}")
         finally:
-            # 平台适配器在 send_message 内同步读取文件后上传，返回即可安全删除，
-            # 否则长期运行的实例会在系统临时目录无限堆积
+            # 适配器在 send_message 内同步读取文件，返回后删除以免临时目录堆积
             try:
                 os.remove(filepath)
             except OSError:
                 pass
 
     async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> str:
-        # 1. 格式校验与规范化
-        bvid_raw = (kwargs.get("bvid") or "").strip()
-        if not bvid_raw:
-            return "请提供 B 站视频链接、BV 号或 b23.tv 短链。"
         try:
-            bvid = await normalize_bvid(bvid_raw)
-        except BvidParseError:
-            return "解析视频链接失败，请检查链接是否正确（支持 B 站完整链接 / BV 号 / b23.tv 短链）。"
-
-        logger.info(f"[{self.name}] 开始解析视频：{bvid}")
-
-        # 2. 分 P 参数（可选）：LLM 可能传字符串或 None，宽松归一为 int
-        raw_page = kwargs.get("page")
-        try:
-            page = int(raw_page) if raw_page is not None else 1
-        except (TypeError, ValueError):
-            return f"分 P 参数无效：{raw_page!r}（应为从 1 开始的整数）。"
-
-        # 3. 获取字幕
-        try:
-            title, subtitle_text = await fetch_subtitle(
-                bvid, self.sessdata, self.bili_jct, page=page
+            page = self._int_arg(kwargs, "page")
+            result = await load_subtitle(
+                kwargs.get("video") or "", page, self.credential, self.cache
             )
         except SubtitleFetchError as e:
             return str(e)
-
-        # 4. 自动发送 txt 文件（如果开启）：发送完整字幕，
-        #    max_subtitle_length 截断只用于控制返回给 LLM 的上下文长度
         if self.auto_send_txt:
-            await self._send_txt_file(context, title, bvid, subtitle_text)
-
-        # 5. 长度控制：防止 LLM 上下文溢出
-        subtitle_text = _truncate(subtitle_text, self.max_subtitle_length)
-
-        # 返回字幕纯文本，前附标题行
-        return f"{self.result_prefix} {title}\n\n{subtitle_text}"
-
-
-@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class BilibiliTool(_BiliToolBase):
-    name: str = "bilibili_caption"
-    description: str = "获取哔哩哔哩视频的字幕纯文本。如果视频没有字幕则返回提示信息。"
-    parameters: dict = Field(
-        default_factory=lambda: {
-            "type": "object",
-            "properties": {
-                "bvid": {
-                    "type": "string",
-                    "description": "想要获取的哔哩哔哩视频的BVID或是b23.tv链接，例如BV1GJ411x7h7或https://b23.tv/4bdIZBf",
-                },
-                "page": {
-                    "type": "integer",
-                    "description": "分 P 号，从 1 开始计数。单 P 视频无需传；仅当用户明确提到分 P 时才传。",
-                    "default": 1,
-                },
-            },
-            "required": ["bvid"],
-        }
-    )
-    result_prefix: str = "[字幕]"
-
-
-@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class BilibiliReadTool(_BiliToolBase):
-    name: str = "bilibili_read"
-    description: str = (
-        "通读哔哩哔哩视频的完整字幕以便你解读视频内容。"
-        "当用户要求你解读、总结、分析、评价某个B站视频时调用，"
-        "返回完整字幕原文供你通读，之后由你自行组织语言输出解读。"
-        "注意：完整字幕会占用大量上下文，token 消耗较高，"
-        "仅在用户明确要求深度解读视频内容时调用，普通字幕提取请使用 bilibili_caption。"
-    )
-    parameters: dict = Field(
-        default_factory=lambda: {
-            "type": "object",
-            "properties": {
-                "bvid": {
-                    "type": "string",
-                    "description": "想要解读的哔哩哔哩视频的BVID或是b23.tv链接，例如BV1GJ411x7h7或https://b23.tv/4bdIZBf",
-                },
-                "page": {
-                    "type": "integer",
-                    "description": "分 P 号，从 1 开始计数。单 P 视频无需传；仅当用户明确提到分 P 时才传。",
-                    "default": 1,
-                },
-            },
-            "required": ["bvid"],
-        }
-    )
-    result_prefix: str = "[完整字幕]"
+            await self._send_txt_file(context, result.title, result.text)
+        return f"[字幕] {result.title}\n\n{result.text}"
 
 
 class BiliCaption(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
-        # AstrBotConfig 是 dict 子类，直接按字典读取
-        bilibili_cookie = config.get("bilibili_cookie", {})
-
-        sessdata = bilibili_cookie.get("sessdata", "")
-        bili_jct = bilibili_cookie.get("bili_jct", "")
-        max_len = config.get("max_subtitle_length", 0)
-        auto_send_txt = config.get("auto_send_txt", False)
-        enable_read_tool = config.get("enable_read_tool", False)
-        read_max_len = config.get("read_max_subtitle_length", 0)
-
-        # 配置完整性校验日志
-        if not sessdata:
-            logger.warning(
-                "BiliCaption: SESSDATA 未配置，可能导致无法获取高质量字幕或鉴权失败。"
-            )
-        if not bili_jct:
-            logger.warning("BiliCaption: bili_jct 未配置。")
-
-        # 注册字幕提取工具
-        tool = BilibiliTool(
-            sessdata=sessdata,
-            bili_jct=bili_jct,
-            max_subtitle_length=max_len,
-            auto_send_txt=auto_send_txt,
+        cookie = config.get("bilibili_cookie", {})
+        sessdata = cookie.get("sessdata", "")
+        bili_jct = cookie.get("bili_jct", "")
+        credential = (
+            Credential(sessdata=sessdata, bili_jct=bili_jct) if sessdata else None
         )
-        self.context.add_llm_tools(tool)
+        if credential is None:
+            logger.warning("BiliCaption: SESSDATA 未配置，无法读取 B 站字幕。")
 
-        # 按需注册深度解读工具（高 token 消耗，默认关闭）
-        if enable_read_tool:
-            read_tool = BilibiliReadTool(
-                sessdata=sessdata,
-                bili_jct=bili_jct,
-                max_subtitle_length=read_max_len,
-            )
-            self.context.add_llm_tools(read_tool)
-            logger.info(
-                "BiliCaption: bilibili_read 工具已注册（完整字幕通读，token 消耗较高）"
-            )
+        # 两个工具共用同一份缓存
+        cache = SubtitleCache(
+            config.get("cache_ttl_seconds", 3600), config.get("cache_max_entries", 64)
+        )
+        self.context.add_llm_tools(
+            BiliViewTool(
+                credential=credential,
+                cache=cache,
+                max_chars=config.get("view_max_chars", 20000),
+            ),
+            BiliCaptionTool(
+                credential=credential,
+                cache=cache,
+                auto_send_txt=config.get("auto_send_txt", False),
+            ),
+        )

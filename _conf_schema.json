@@ -1,43 +1,43 @@
 {
-    "bilibili_cookie": {
-        "description": "B站Cookie（非必需，但配置后可获取更高清字幕）",
-        "hint": "README有详细的获取教程",
-        "type": "object",
-        "items": {
-            "sessdata": {
-                "description": "sessdata",
-                "type": "string",
-                "default": ""
-            },
-            "bili_jct": {
-                "description": "bili_jct",
-                "type": "string",
-                "default": ""
-            }
-        }
-    },
-    "max_subtitle_length": {
-        "description": "字幕最大返回长度（字符数），0表示不限制",
-        "hint": "设为0返回完整字幕，设值过大会增加token消耗",
-        "type": "int",
-        "default": 0
-    },
-    "auto_send_txt": {
-        "description": "是否自动将字幕保存为txt文件并发送到聊天中",
-        "hint": "开启后每次提取字幕都会自动发送txt文件到群里",
-        "type": "bool",
-        "default": false
-    },
-    "enable_read_tool": {
-        "description": "是否启用bilibili_read深度解读工具（高token消耗）",
-        "hint": "关闭时bilibili_read不会注册到LLM工具列表。开启后当用户要求解读视频时，bot会完整读取字幕全文再进行总结",
-        "type": "bool",
-        "default": false
-    },
-    "read_max_subtitle_length": {
-        "description": "bilibili_read工具的字幕最大返回长度（字符数），0表示不限制（全文通读）",
-        "hint": "完整字幕可能很长，设一个上限防止上下文溢出。建议设为0或很大的值",
-        "type": "int",
-        "default": 0
+  "bilibili_cookie": {
+    "description": "B站Cookie（读取字幕必需）",
+    "hint": "README有详细的获取教程",
+    "type": "object",
+    "items": {
+      "sessdata": {
+        "default": "",
+        "type": "string",
+        "description": "sessdata"
+      },
+      "bili_jct": {
+        "default": "",
+        "type": "string",
+        "description": "bili_jct"
+      }
     }
+  },
+  "view_max_chars": {
+    "description": "bili_view 单次返回的字幕最大字符数，0表示不限制",
+    "hint": "超出时保留开头与结尾，bot 可用 offset 翻页读取中间部分",
+    "type": "int",
+    "default": 20000
+  },
+  "auto_send_txt": {
+    "description": "bili_caption 是否自动将字幕保存为txt文件并发送到聊天中",
+    "hint": "开启后每次调用 bili_caption 都会发送txt文件",
+    "type": "bool",
+    "default": false
+  },
+  "cache_ttl_seconds": {
+    "description": "字幕缓存有效期（秒），0表示关闭缓存",
+    "hint": "同一视频在有效期内重复读取直接命中缓存",
+    "type": "int",
+    "default": 3600
+  },
+  "cache_max_entries": {
+    "description": "字幕缓存最大条数",
+    "hint": "超出时淘汰最久未使用的条目",
+    "type": "int",
+    "default": 64
+  }
 }

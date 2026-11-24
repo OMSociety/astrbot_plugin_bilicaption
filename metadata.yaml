@@ -1,10 +1,11 @@
 name: bilicaption
-display_name: B站字幕提取解读
-desc: 提供获取B站视频字幕文本、解读视频内容的 LLM 工具，自动识别消息中的 B 站链接/BV 号/b23 短链
-version: 1.1.0
+display_name: B站视频字幕解读
+desc: 提供 bili_view 与 bili_caption 工具：按 BV 号、av 号、视频链接或短链读取 B 站视频字幕，供 bot 理解视频内容或获取字幕原文
+version: 1.2.0
 author: OMSociety
 repo: https://github.com/OMSociety/astrbot_plugin_bilicaption
 tags:
   - bilibili
   - 字幕
   - 提取
+

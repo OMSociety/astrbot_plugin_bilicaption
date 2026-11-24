@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "display_name": "Bilibili Caption Reader",
-    "desc": "LLM tools for fetching Bilibili video subtitles and interpreting video content. Automatically recognizes Bilibili links, BV IDs, and b23 short links in messages."
+    "display_name": "Bilibili Subtitle Reader",
+    "desc": "Tools bili_view and bili_caption read Bilibili video subtitles from a BV ID, av number, video link or short link, so the bot can understand the video or fetch the raw subtitle text"
   },
   "config": {
     "bilibili_cookie": {
-      "description": "Bilibili Cookie (optional, but enables higher-quality subtitles)",
+      "description": "Bilibili Cookie (required to read subtitles)",
       "hint": "See the README for a detailed guide.",
       "sessdata": {
         "description": "sessdata"
@@ -14,21 +14,21 @@
         "description": "bili_jct"
       }
     },
-    "max_subtitle_length": {
-      "description": "Maximum returned subtitle length (characters). 0 means no limit",
-      "hint": "Set to 0 to return the full subtitle; a larger value increases token consumption"
+    "view_max_chars": {
+      "description": "Maximum subtitle characters returned by bili_view per call. 0 means no limit",
+      "hint": "Over-limit text keeps the head and tail; the bot can page through the middle with offset"
     },
     "auto_send_txt": {
-      "description": "Automatically save subtitles as a txt file and send it to the chat",
-      "hint": "When enabled, a txt file is sent to the group every time subtitles are extracted"
+      "description": "Whether bili_caption automatically saves subtitles as a txt file and sends it to the chat",
+      "hint": "When enabled, every bili_caption call sends a txt file"
     },
-    "enable_read_tool": {
-      "description": "Enable the bilibili_read in-depth interpretation tool (high token consumption)",
-      "hint": "When disabled, bilibili_read is not registered in the LLM tool list. When enabled, the bot reads the full subtitle text before summarizing whenever a user asks for a video interpretation"
+    "cache_ttl_seconds": {
+      "description": "Subtitle cache TTL (seconds). 0 disables the cache",
+      "hint": "Repeated reads of the same video within the TTL hit the cache"
     },
-    "read_max_subtitle_length": {
-      "description": "Maximum subtitle length returned by the bilibili_read tool (characters). 0 means no limit (full read-through)",
-      "hint": "Full subtitles can be very long; set an upper bound to prevent context overflow. 0 or a very large value is recommended"
+    "cache_max_entries": {
+      "description": "Maximum number of cached subtitles",
+      "hint": "The least recently used entry is evicted when exceeded"
     }
   }
 }

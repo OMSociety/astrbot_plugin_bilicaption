@@ -4,9 +4,9 @@
 
 <h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili Subtitle Extraction & Reading</h1>
 
-**bilibili video subtitle extraction and in-depth reading assistant** —— Plain-text subtitle extraction · Full transcript reading · Automatic link detection · Controllable length · txt file delivery
+**bilibili video subtitle reading assistant** —— Understand and summarize videos · Raw subtitle text · Many link formats · Paging for long subtitles · Result cache
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A5v4-green.svg)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/OMSociety/astrbot_plugin_bilicaption)](https://github.com/OMSociety/astrbot_plugin_bilicaption/stargazers)
@@ -18,150 +18,68 @@
 
 ---
 
-## Core Features
+## Features
 
 | Feature | Description |
-|------|------|
-| **Plain-text subtitle extraction** | Extracts the original subtitles of bilibili videos without AI summarization and returns them directly to the user |
-| **In-depth subtitle reading** | Feeds the full subtitles to the bot itself so it can interpret / summarize the video content (optional, high token usage) |
-| **Smart link detection** | Supports full bilibili links / BV IDs / b23.tv short links / bare short codes with automatic parsing |
-| **Length control** | The maximum returned subtitle length can be configured separately for each tool to prevent context overflow |
-| **txt file delivery** | Optionally saves the full subtitles as a txt file and sends it to the chat |
-| **Login state support** | Full AI subtitles can be fetched after configuring bilibili Cookies (the subtitle API requires a logged-in state) |
+|---|---|
+| **Understand a video: `bili_view`** | Reads subtitles so the bot can understand, summarize, or review a video; 20000 characters per call by default, keeps the head and tail when longer and pages through the rest with `offset` |
+| **Raw subtitles: `bili_caption`** | Returns the complete subtitles with no length limit; can optionally save them as a txt file and send it to the chat |
+| **Many link formats** | BV ID / av number / full link / b23.tv and bili2233.cn short links / whole share text; `?p=N` selects the part automatically |
+| **Result cache** | Shared by both tools, 1 hour and 64 entries by default; paging does not repeat requests |
+| **Clear failure reasons** | Video not found, no subtitles, login expired, risk control, and network timeout each return a specific message |
 
----
+## Which tool
 
-## Feature Overview
-
-### Subtitle extraction bilibili_caption
-Send a bilibili link / BV ID directly in the chat, and the bot automatically calls the tool to return the plain-text subtitles.
-
-### In-depth reading bilibili_read
-When enabled, whenever you ask the bot to interpret a video it first reads through the full subtitles and then composes its answer.
-
-### Difference between the two tools
-
-| Feature | `bilibili_caption` | `bilibili_read` |
-|:----|:-------------------|:----------------|
-| Positioning | Quickly extracts the original subtitle text | In-depth interpretation for the bot's own reading |
-| Returns | Subtitle text for the AI to show the user | Full subtitles fed into the bot's reasoning |
-| Token usage | Controllable (can be truncated) | Relatively high (reads the full text by default) |
-| Enabled by default | Always available | Off by default; must be enabled in the configuration |
+| The user wants | Tool |
+|:----|:----|
+| To understand, summarize, or review a video, or to ask about its content | `bili_view` |
+| The subtitle text itself, or a subtitle txt file | `bili_caption` |
 
 ---
 
 ## Quick Start
 
-### Step 1: Installation
+1. Install: AstrBot WebUI → Plugin Market → search `bilicaption`. Dependencies (bilibili-api-python 17.x / aiohttp / aiofiles) are installed from `requirements.txt` automatically.
+2. Fill in the cookie (required): the Bilibili subtitle API needs a login session. In the `bilibili_cookie` group, set `sessdata` (log in at [bilibili.com](https://www.bilibili.com) → F12 → Application → Cookies → copy the value of `SESSDATA`) and optionally `bili_jct`.
+3. Reload the plugin in the WebUI and send a Bilibili link in chat.
 
-AstrBot WebUI → Plugin Marketplace → search for `bilicaption`
-
-> **Note**: Dependencies (bilibili-api-python / aiohttp / aiofiles) are installed automatically from `requirements.txt` when the plugin is installed; no manual installation is required.
-
-### Step 2: Configure bilibili Cookies (required)
-
-> **Note**: The bilibili subtitle API requires a logged-in state, and **subtitles cannot be fetched without configuring Cookies** (AI subtitles are hidden from anonymous users). Configure them before use.
-
-Fill in the `bilibili_cookie` group of the plugin configuration:
-
-| Field | How to obtain |
-|:----|:----|
-| `sessdata` | Log in to [bilibili.com](https://www.bilibili.com) in your browser → F12 → Application → Cookies → copy the value of `SESSDATA` |
-| `bili_jct` | Same as above; copy the value of `bili_jct` |
-
-### Step 3: Restart to apply
-
-After configuring, reload the plugin in the WebUI (or restart AstrBot), then send a bilibili link in the chat to test.
-
----
-
-## Configuration Options
+## Configuration
 
 | Option | Type | Default | Description |
 |:------|:-----|:-------|:-----|
-| `bilibili_cookie.sessdata` | string | `""` | bilibili SESSDATA Cookie (required; the subtitle API requires a logged-in state) |
-| `bilibili_cookie.bili_jct` | string | `""` | bilibili bili_jct Cookie |
-| `max_subtitle_length` | int | `0` | Maximum number of subtitle characters returned by the caption tool; `0` means no limit |
-| `auto_send_txt` | bool | `false` | When enabled, extracted subtitles are automatically sent to the chat as a txt file |
-| `enable_read_tool` | bool | `false` | Enables the `bilibili_read` in-depth reading tool (high token usage) |
-| `read_max_subtitle_length` | int | `0` | Maximum number of subtitle characters returned by the read tool; `0` means no limit (full-text reading) |
+| `bilibili_cookie.sessdata` | string | `""` | Bilibili SESSDATA cookie (required) |
+| `bilibili_cookie.bili_jct` | string | `""` | Bilibili bili_jct cookie |
+| `view_max_chars` | int | `20000` | Maximum characters `bili_view` returns per call; `0` means no limit |
+| `auto_send_txt` | bool | `false` | When enabled, `bili_caption` sends a subtitle txt file to the chat |
+| `cache_ttl_seconds` | int | `3600` | Subtitle cache TTL in seconds; `0` disables the cache |
+| `cache_max_entries` | int | `64` | Maximum cached entries; the least recently used entry is evicted when exceeded |
 
-### Quick configuration template
+## Tools
 
-Fill in the settings via the WebUI configuration panel, or refer to the following structure (`data/config/astrbot_plugin_bilicaption_config.json`):
-
-```json
-{
-  "bilibili_cookie": {
-    "sessdata": "YOUR_SESSDATA",
-    "bili_jct": "YOUR_BILI_JCT"
-  },
-  "max_subtitle_length": 0,
-  "auto_send_txt": false,
-  "enable_read_tool": false,
-  "read_max_subtitle_length": 0
-}
-```
-
----
-
-## LLM-Callable Tools
-
-The plugin registers 2 LLM tools (`bilibili_read` requires enabling the `enable_read_tool` option). The model decides on its own when to call them; just state your request in natural language:
-
-```
-User: Extract the subtitles for this video https://b23.tv/4bdIZBf
-🤖 → bilibili_caption(bvid=https://b23.tv/4bdIZBf)
-    [Subtitles] "A Brief History of AI: From Turing to GPT"
-    Hello everyone, and welcome to this video...
-
-User: Walk me through this video BV1GJ411x7h7
-🤖 → bilibili_read(bvid=BV1GJ411x7h7)
-    (Reads through the full subtitles, then composes its own interpretation)
-```
-
-### bilibili_caption
-Returns the plain-text subtitles of a bilibili video. If the video has no subtitles, a notice is returned instead.
+### bili_view
 
 | Parameter | Type | Required | Description |
 |:----|:----|:----:|:-----|
-| `bvid` | string | Yes | BVID / full bilibili link / b23.tv short link, e.g. `BV1GJ411x7h7` or `https://b23.tv/4bdIZBf` |
-| `page` | integer | No | Part number, starting from 1, default 1. Not needed for single-part videos |
+| `video` | string | Yes | BV ID / av number / full link / short link / share text containing a link |
+| `page` | integer | No | Part number starting at 1; may be omitted when the link has `?p=N` |
+| `offset` | integer | No | Continue reading from this character position when the result says more is available |
 
-### bilibili_read (requires enabling the `enable_read_tool` option)
-Reads through the full subtitles of a bilibili video so the bot can interpret its content. Called when the user asks to summarize, analyze, or evaluate a bilibili video.
+When the subtitles exceed `view_max_chars`, the result keeps the first 60% and last 40% and reports the total length, the omitted ratio, and the usable `offset`.
+
+### bili_caption
 
 | Parameter | Type | Required | Description |
 |:----|:----|:----:|:-----|
-| `bvid` | string | Yes | BVID / full bilibili link / b23.tv short link |
-| `page` | integer | No | Part number, starting from 1, default 1. Not needed for single-part videos |
-
-> **Note**: `bilibili_read` returns the full original subtitles without adding any preset prompts. The bot reads them itself and decides how to interpret the video.
-
----
+| `video` | string | Yes | Same as above |
+| `page` | integer | No | Part number starting at 1 |
 
 ## FAQ
 
-### Q1: Does it require configuration?
+**Is configuration required?** Yes. The subtitle API needs a login session; set `bilibili_cookie.sessdata`.
 
-**Yes**. The bilibili subtitle API requires a logged-in state; configure `bilibili_cookie.sessdata` and `bili_jct` (see [Quick Start](#quick-start)).
+**Can every video be read?** No. When the video or the part has no subtitles, the tool returns a clear "no subtitles" message.
 
-### Q2: Can subtitles be fetched for every video?
-
-No. For videos where the uploader has not uploaded subtitles and bilibili provides no AI subtitles, the content cannot be fetched; the plugin will report "No subtitles available".
-
-### Q3: Why no AI summarization?
-
-`bilibili_caption` is designed for verbatim extraction. `bilibili_read` instead leaves summarization to the bot itself, without preset prompts.
-
-### Q4: What is the difference between `bilibili_caption` and `bilibili_read`?
-
-caption quickly returns the subtitle text for you to read; read feeds the full text to the bot, which reads it through before producing its interpretation. read costs more tokens but yields higher-quality interpretation. The two do not replace each other; toggle them as needed.
-
-### Q5: How does it differ from BiliRead?
-
-BiliRead calls a third-party LLM to summarize subtitles; this plugin skips the third-party LLM and either returns the original subtitles directly or uses the current bot itself for interpretation.
-
+**The cookie expired?** The tool reports that the login has expired; fetch a new SESSDATA, update the config, and reload the plugin.
 ## Changelog
 
 > **[View changelog →](CHANGELOG.md)**
@@ -178,3 +96,4 @@ If this plugin helps you, please consider giving it a Star. For issues and sugge
 This project is licensed under **AGPL-3.0** (inherited from the upstream BiliRead).
 
 [@OMSociety](https://github.com/OMSociety)
+

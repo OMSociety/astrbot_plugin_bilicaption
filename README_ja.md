@@ -4,9 +4,9 @@
 
 <h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili 字幕抽出・解読</h1>
 
-**bilibili 動画の字幕抽出と深掘り解読アシスタント** —— 字幕テキスト抽出 · 字幕全文通読 · リンク自動判別 · 長さ制御 · txt ファイル送信
+**bilibili 動画の字幕読み取りアシスタント** —— 動画の理解と要約 · 字幕原文の取得 · 多様なリンク形式 · 長い字幕のページ送り · 結果キャッシュ
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/OMSociety/astrbot_plugin_bilicaption)
 [![AstrBot](https://img.shields.io/badge/AstrBot-%E2%89%A5v4-green.svg)](https://github.com/AstrBotDevs/AstrBot)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-orange.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/OMSociety/astrbot_plugin_bilicaption)](https://github.com/OMSociety/astrbot_plugin_bilicaption/stargazers)
@@ -18,150 +18,68 @@
 
 ---
 
-## 主な特徴
+## 特長
 
-| 特徴 | 説明 |
-|------|------|
-| **字幕テキスト抽出** | bilibili 動画の字幕原文を抽出し、AI による要約は行わず、そのままユーザーへ返します |
-| **字幕の深掘り通読** | 字幕全文を bot 自身に渡し、bot が動画内容を自ら解読・要約します（任意、トークン消費大） |
-| **リンク自動判別** | bilibili の完全なリンク / BV 番号 / b23.tv 短縮リンク / 裸の短縮コードに対応し、自動で解析します |
-| **長さ制御** | 2 つのツールそれぞれで字幕の最大文字数を設定でき、コンテキストの溢れを防ぎます |
-| **txt ファイル送信** | 字幕全文を txt ファイルとして保存しチャットへ送ることができます（任意） |
-| **ログイン状態対応** | bilibili の Cookie を設定すると完全な AI 字幕を取得できます（字幕 API にはログイン状態が必要） |
+| 特長 | 説明 |
+|---|---|
+| **動画を理解する `bili_view`** | 字幕を読み取り、ボットが動画を理解・要約・評価できるようにします。既定は 1 回 20000 文字で、長い場合は先頭と末尾を残し、残りは `offset` で読み進められます |
+| **字幕原文 `bili_caption`** | 長さ無制限で字幕全文を返します。字幕を txt ファイルにしてチャットへ送ることもできます |
+| **多様なリンク形式** | BV 番号 / av 番号 / 完全なリンク / b23.tv・bili2233.cn 短縮リンク / 共有テキスト全体。`?p=N` でパートを自動判別します |
+| **結果キャッシュ** | 2 つのツールで共有し、既定は 1 時間・64 件。ページ送りで再リクエストしません |
+| **明確な失敗理由** | 動画なし、字幕なし、ログイン失効、リスク制御、ネットワークタイムアウトを個別に通知します |
 
----
+## ツールの使い分け
 
-## 機能概要
-
-### 字幕抽出 bilibili_caption
-チャットで bilibili のリンク / BV 番号を送るだけで、bot が自動でツールを呼び出し、字幕テキストを返します。
-
-### 深掘り解読 bilibili_read
-有効にすると、動画の解読を求められたとき、bot はまず字幕全文を通読してから文章を組み立てます。
-
-### 2 つのツールの違い
-
-| 特徴 | `bilibili_caption` | `bilibili_read` |
-|:----|:-------------------|:----------------|
-| 位置づけ | 字幕原文をすばやく抽出 | bot 自身の読解のための深掘り解読 |
-| 返却 | 字幕テキスト。AI がユーザーへ表示 | 字幕全文。bot の思考フローへ入力 |
-| トークン消費 | 制御可能（切り詰め可） | やや大きい（既定では全文通読） |
-| 既定で有効 | 常に利用可能 | 既定はオフ。設定での有効化が必要 |
+| ユーザーの要望 | ツール |
+|:----|:----|
+| 動画の理解・要約・評価、内容に関する質問への回答 | `bili_view` |
+| 字幕テキストそのもの、または字幕の txt ファイル | `bili_caption` |
 
 ---
 
 ## クイックスタート
 
-### ステップ 1: インストール
+1. インストール：AstrBot WebUI → プラグインマーケット → `bilicaption` を検索。依存関係（bilibili-api-python 17.x / aiohttp / aiofiles）は `requirements.txt` から自動で入ります。
+2. Cookie の設定（必須）：Bilibili の字幕 API にはログイン状態が必要です。`bilibili_cookie` グループに `sessdata`（[bilibili.com](https://www.bilibili.com) にログイン → F12 → Application → Cookies → `SESSDATA` の値をコピー）を入力し、必要なら `bili_jct` も入力します。
+3. WebUI でプラグインを再読み込みし、チャットに Bilibili のリンクを送ります。
 
-AstrBot WebUI → プラグインマーケット → `bilicaption` を検索
+## 設定項目
 
-> **ヒント**：プラグインのインストール時、依存パッケージ（bilibili-api-python / aiohttp / aiofiles）は `requirements.txt` に基づき自動でインストールされます。手動インストールは不要です。
-
-### ステップ 2: bilibili の Cookie を設定（必須）
-
-> **ヒント**：bilibili の字幕 API にはログイン状態が必要で、**Cookie を設定しないと字幕を取得できません**（AI 字幕は匿名ユーザーには非表示です）。使用前に設定してください。
-
-プラグイン設定の `bilibili_cookie` グループに入力します：
-
-| 項目 | 取得方法 |
-|:----|:----|
-| `sessdata` | ブラウザで [bilibili.com](https://www.bilibili.com) にログイン → F12 → Application → Cookies → `SESSDATA` の値をコピー |
-| `bili_jct` | 同様に `bili_jct` の値をコピー |
-
-### ステップ 3: 再起動で反映
-
-設定後、WebUI でプラグインを再読み込み（または AstrBot を再起動）し、チャットで bilibili のリンクを送ってテストできます。
-
----
-
-## 設定項目の説明
-
-| 設定項目 | 型 | 既定値 | 説明 |
+| 項目 | 型 | 既定値 | 説明 |
 |:------|:-----|:-------|:-----|
-| `bilibili_cookie.sessdata` | string | `""` | bilibili の SESSDATA Cookie（必須。字幕 API にはログイン状態が必要） |
-| `bilibili_cookie.bili_jct` | string | `""` | bilibili の bili_jct Cookie |
-| `max_subtitle_length` | int | `0` | caption ツールの字幕最大文字数。`0` は無制限 |
-| `auto_send_txt` | bool | `false` | 有効にすると、抽出した字幕を自動で txt ファイルとしてチャットへ送信 |
-| `enable_read_tool` | bool | `false` | `bilibili_read` 深掘り解読ツールを有効化（トークン消費大） |
-| `read_max_subtitle_length` | int | `0` | read ツールの字幕最大文字数。`0` は無制限（全文通読） |
+| `bilibili_cookie.sessdata` | string | `""` | Bilibili の SESSDATA Cookie（必須） |
+| `bilibili_cookie.bili_jct` | string | `""` | Bilibili の bili_jct Cookie |
+| `view_max_chars` | int | `20000` | `bili_view` が 1 回に返す最大文字数。`0` で無制限 |
+| `auto_send_txt` | bool | `false` | 有効にすると `bili_caption` が字幕の txt ファイルをチャットへ送信します |
+| `cache_ttl_seconds` | int | `3600` | 字幕キャッシュの有効期間（秒）。`0` でキャッシュ無効 |
+| `cache_max_entries` | int | `64` | キャッシュの最大件数。超過時は最も長く使われていない項目を破棄します |
 
-### クイック設定テンプレート
+## ツール
 
-WebUI の設定パネルに入力するか、次の構造を参考にしてください（`data/config/astrbot_plugin_bilicaption_config.json`）：
-
-```json
-{
-  "bilibili_cookie": {
-    "sessdata": "YOUR_SESSDATA",
-    "bili_jct": "YOUR_BILI_JCT"
-  },
-  "max_subtitle_length": 0,
-  "auto_send_txt": false,
-  "enable_read_tool": false,
-  "read_max_subtitle_length": 0
-}
-```
-
----
-
-## LLM が呼び出せるツール
-
-プラグインは 2 つの LLM ツールを登録します（`bilibili_read` には設定 `enable_read_tool` の有効化が必要）。モデルが呼び出しタイミングを自動で判断するため、自然な言葉で要求するだけです：
-
-```
-ユーザー: この動画の字幕を抽出して https://b23.tv/4bdIZBf
-🤖 → bilibili_caption(bvid=https://b23.tv/4bdIZBf)
-    [字幕] 「AI 発展略史：チューリングから GPT へ」
-    皆さんこんにちは、今回の動画へようこそ...
-
-ユーザー: この動画 BV1GJ411x7h7 を解読して
-🤖 → bilibili_read(bvid=BV1GJ411x7h7)
-    （字幕全文を通読した上で、bot が自ら解読を出力）
-```
-
-### bilibili_caption
-bilibili 動画の字幕テキストを取得します。字幕がない場合はその旨のメッセージを返します。
+### bili_view
 
 | パラメータ | 型 | 必須 | 説明 |
 |:----|:----|:----:|:-----|
-| `bvid` | string | はい | BVID / bilibili の完全なリンク / b23.tv 短縮リンク。例: `BV1GJ411x7h7` または `https://b23.tv/4bdIZBf` |
-| `page` | integer | いいえ | パート番号。1 から開始、既定は 1。単一パートの動画では指定不要 |
+| `video` | string | はい | BV 番号 / av 番号 / 完全なリンク / 短縮リンク / リンクを含む共有テキスト |
+| `page` | integer | いいえ | 1 から始まるパート番号。リンクに `?p=N` があれば省略可 |
+| `offset` | integer | いいえ | 結果に続きがあると示されたとき、この文字位置から読み進めます |
 
-### bilibili_read（設定 `enable_read_tool` の有効化が必要）
-bilibili 動画の字幕全文を通読し、bot が動画内容を解読できるようにします。ユーザーが bilibili 動画の要約・分析・評価を求めたときに呼び出されます。
+字幕が `view_max_chars` を超える場合、結果は先頭 60% と末尾 40% を残し、総文字数・省略割合・利用できる `offset` を示します。
+
+### bili_caption
 
 | パラメータ | 型 | 必須 | 説明 |
 |:----|:----|:----:|:-----|
-| `bvid` | string | はい | BVID / bilibili の完全なリンク / b23.tv 短縮リンク |
-| `page` | integer | いいえ | パート番号。1 から開始、既定は 1。単一パートの動画では指定不要 |
-
-> **注意**：`bilibili_read` は字幕原文を全文返すのみで、事前準備されたプロンプトは一切付加しません。bot が自身で読み、解読方法を判断します。
-
----
+| `video` | string | はい | 上と同じ |
+| `page` | integer | いいえ | 1 から始まるパート番号 |
 
 ## よくある質問
 
-### Q1：設定は必要ですか？
+**設定は必要ですか？** はい。字幕 API にはログイン状態が必要なので、`bilibili_cookie.sessdata` を設定してください。
 
-**必要です**。bilibili の字幕 API にはログイン状態が必要です。`bilibili_cookie.sessdata` と `bili_jct` を設定してください（取得方法は[クイックスタート](#クイックスタート)参照）。
+**すべての動画を読めますか？** いいえ。動画またはそのパートに字幕がない場合、ツールは「字幕なし」と明示して返します。
 
-### Q2：すべての動画で字幕を取得できますか？
-
-いいえ。UP 主が字幕をアップロードしておらず、bilibili に AI 字幕もない動画は内容を取得できません。その場合「現在利用できる字幕はありません」と表示されます。
-
-### Q3：なぜ AI 要約をしないのですか？
-
-`bilibili_caption` はもともと原文抽出に特化しています。`bilibili_read` は要約を bot 自身に任せ、事前準備されたプロンプトを使いません。
-
-### Q4：`bilibili_caption` と `bilibili_read` の違いは何ですか？
-
-caption は字幕テキストをすばやく返してあなたに見せます。read は全文を bot に渡し、bot 自身が通読してから解読を出力します。read はトークンを消費しますが、解読の質は高くなります。両者は代替関係ではなく、必要に応じてオン・オフを設定してください。
-
-### Q5：BiliRead との違いは何ですか？
-
-BiliRead はサードパーティの LLM を呼び出して字幕を要約します。本プラグインはサードパーティの LLM を介さず、字幕原文をそのまま返すか、現在の対話の bot 自身を使って解読します。
-
+**Cookie が失効したら？** ログイン失効が通知されます。新しい SESSDATA を取得して設定を更新し、プラグインを再読み込みしてください。
 ## 更新履歴
 
 > **[更新履歴を見る →](CHANGELOG.md)**
@@ -178,3 +96,4 @@ BiliRead はサードパーティの LLM を呼び出して字幕を要約しま
 本プロジェクトは **AGPL-3.0** で公開されています（フォーク元の BiliRead を継承）。
 
 [@OMSociety](https://github.com/OMSociety)
+

@@ -10,6 +10,47 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-24
+
+### 新增
+
+- 工具 `bili_view`：读取字幕用于理解、总结、评价视频；默认返回上限 20000 字，超限时保留开头 60% 与结尾 40%，提示总长与省略比例，并可用 `offset` 参数从任意位置翻页读取。
+- 链接识别新增 av 号（`av170001` / 纯数字 / `/video/av…` 链接）、`bili2233.cn` 短链与整段分享文本；链接中的 `?p=N` 自动作为分 P 号。
+- 字幕缓存：两个工具共用，默认有效期 1 小时、最多 64 条，过期条目顺带清理，超出容量淘汰最久未使用的条目；配置项 `cache_ttl_seconds`、`cache_max_entries`（TTL 为 0 关闭缓存）。
+- 失败原因细化：视频不存在、没有字幕、该分 P 没有字幕、登录失效、风控、短链非 B 站域、网络超时分别返回具体提示。
+- 新增 `AGENTS.md`。
+
+### 变更
+
+- 工具 `bilibili_caption` 更名为 `bili_caption`，不限制返回长度；工具描述按意图分工：要字幕文本或字幕文件用 `bili_caption`，要理解或总结视频内容用 `bili_view`。
+- 配置项 `bilibili_cookie.sessdata` 变为读取字幕必需项；`auto_send_txt` 仅作用于 `bili_caption`。
+- 依赖 `bilibili-api-python` 要求 17.x。
+- 单元测试覆盖链接解析、SSRF 校验、缓存、长度保护与失败原因映射。
+
+### 移除
+
+- 移除工具 `bilibili_read` 及配置项 `enable_read_tool`、`read_max_subtitle_length`。
+- 移除配置项 `max_subtitle_length`。
+
+### Added
+
+- Tool `bili_view`: reads subtitles for understanding, summarizing, or reviewing a video; returns at most 20000 characters by default, keeps the first 60% and last 40% when over the limit, reports the total length and omitted ratio, and pages through any position with the `offset` parameter.
+- Link recognition now covers av numbers (`av170001`, bare digits, `/video/av…` links), `bili2233.cn` short links, and whole share texts; `?p=N` in a link is used as the part number.
+- Subtitle cache shared by both tools: default TTL of 1 hour and up to 64 entries; expired entries are purged on access and the least recently used entry is evicted when over capacity; options `cache_ttl_seconds` and `cache_max_entries` (a TTL of 0 disables the cache).
+- Specific failure reasons: video not found, no subtitles, no subtitles for this part, login expired, risk control, short link outside Bilibili domains, and network timeout each return a distinct message.
+- Added `AGENTS.md`.
+
+### Changed
+
+- Tool `bilibili_caption` is renamed `bili_caption` and has no length limit; tool descriptions divide work by intent: use `bili_caption` for subtitle text or a subtitle file, and `bili_view` to understand or summarize video content.
+- `bilibili_cookie.sessdata` is required to read subtitles; `auto_send_txt` applies only to `bili_caption`.
+- Dependency `bilibili-api-python` requires 17.x.
+- Unit tests cover link parsing, SSRF validation, cache, length protection, and failure-reason mapping.
+
+### Removed
+
+- Removed tool `bilibili_read` and options `enable_read_tool`, `read_max_subtitle_length`.
+- Removed option `max_subtitle_length`.
 ## [1.1.0] - 2026-09-13
 
 ### 新增
@@ -51,3 +92,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 依赖 `bilibili-api-python` 锁定上限版本 `<18`，避免上游大版本破坏性变更导致插件静默失效。
 - 移除永不生效的防御分支与空生命周期钩子，两个字幕工具合并为公共基类实现（行为不变）。
+
