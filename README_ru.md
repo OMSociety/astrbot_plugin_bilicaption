@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption Извлечение и разбор субтитров bilibili</h1>
+<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption Чтение субтитров bilibili</h1>
 
 **Помощник по чтению субтитров видео bilibili** —— понимание и краткий пересказ видео · исходный текст субтитров · разные форматы ссылок · постраничное чтение длинных субтитров · кэш результатов
 

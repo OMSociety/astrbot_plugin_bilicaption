@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili 字幕抽出・解読</h1>
+<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili 字幕リーダー</h1>
 
 **bilibili 動画の字幕読み取りアシスタント** —— 動画の理解と要約 · 字幕原文の取得 · 多様なリンク形式 · 長い字幕のページ送り · 結果キャッシュ
 

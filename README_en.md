@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili Subtitle Extraction & Reading</h1>
+<h1><img src="https://raw.githubusercontent.com/OMSociety/astrbot_plugin_bilicaption/main/logo.png" width="192" alt="BiliCaption Logo"><br>BiliCaption bilibili Subtitle Reader</h1>
 
 **bilibili video subtitle reading assistant** —— Understand and summarize videos · Raw subtitle text · Many link formats · Paging for long subtitles · Result cache
 
