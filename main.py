@@ -41,6 +41,7 @@ class _BiliToolBase(FunctionTool[AstrAgentContext]):
     parameters: dict = Field(default_factory=dict)
 
     credential: Credential | None = None
+    language: str = "zh"
     cache: SubtitleCache = Field(default_factory=lambda: SubtitleCache(0, 0))
 
     @staticmethod
@@ -84,7 +85,11 @@ class BiliViewTool(_BiliToolBase):
             page = self._int_arg(kwargs, "page")
             offset = self._int_arg(kwargs, "offset")
             result = await load_subtitle(
-                kwargs.get("video") or "", page, self.credential, self.cache
+                kwargs.get("video") or "",
+                page,
+                self.credential,
+                self.cache,
+                self.language,
             )
             return render_view(result.title, result.text, self.max_chars, offset)
         except SubtitleFetchError as e:
@@ -145,7 +150,11 @@ class BiliCaptionTool(_BiliToolBase):
         try:
             page = self._int_arg(kwargs, "page")
             result = await load_subtitle(
-                kwargs.get("video") or "", page, self.credential, self.cache
+                kwargs.get("video") or "",
+                page,
+                self.credential,
+                self.cache,
+                self.language,
             )
         except SubtitleFetchError as e:
             return str(e)
@@ -166,6 +175,7 @@ class BiliCaption(Star):
         if credential is None:
             logger.warning("BiliCaption: SESSDATA 未配置，无法读取 B 站字幕。")
 
+        language = str(config.get("subtitle_language", "zh") or "zh")
         # 两个工具共用同一份缓存
         cache = SubtitleCache(
             config.get("cache_ttl_seconds", 3600), config.get("cache_max_entries", 64)
@@ -173,11 +183,13 @@ class BiliCaption(Star):
         self.context.add_llm_tools(
             BiliViewTool(
                 credential=credential,
+                language=language,
                 cache=cache,
                 max_chars=config.get("view_max_chars", 20000),
             ),
             BiliCaptionTool(
                 credential=credential,
+                language=language,
                 cache=cache,
                 auto_send_txt=config.get("auto_send_txt", False),
             ),

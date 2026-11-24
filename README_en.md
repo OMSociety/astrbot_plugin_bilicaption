@@ -49,6 +49,7 @@
 |:------|:-----|:-------|:-----|
 | `bilibili_cookie.sessdata` | string | `""` | Bilibili SESSDATA cookie (required) |
 | `bilibili_cookie.bili_jct` | string | `""` | Bilibili bili_jct cookie |
+| `subtitle_language` | string | `zh` | Preferred subtitle language (language code prefix); manual subtitles come first within a language |
 | `view_max_chars` | int | `20000` | Maximum characters `bili_view` returns per call; `0` means no limit |
 | `auto_send_txt` | bool | `false` | When enabled, `bili_caption` sends a subtitle txt file to the chat |
 | `cache_ttl_seconds` | int | `3600` | Subtitle cache TTL in seconds; `0` disables the cache |

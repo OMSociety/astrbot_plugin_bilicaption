@@ -14,6 +14,10 @@
         "description": "bili_jct"
       }
     },
+    "subtitle_language": {
+      "description": "Preferred subtitle language",
+      "hint": "Language code prefix such as zh, en, ja; within the same language manual subtitles come first, and other subtitles are used when none match"
+    },
     "view_max_chars": {
       "description": "Maximum subtitle characters returned by bili_view per call. 0 means no limit",
       "hint": "Over-limit text keeps the head and tail; the bot can page through the middle with offset"

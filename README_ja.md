@@ -49,6 +49,7 @@
 |:------|:-----|:-------|:-----|
 | `bilibili_cookie.sessdata` | string | `""` | Bilibili の SESSDATA Cookie（必須） |
 | `bilibili_cookie.bili_jct` | string | `""` | Bilibili の bili_jct Cookie |
+| `subtitle_language` | string | `zh` | 優先する字幕言語（言語コード接頭辞）。同じ言語では手動字幕を優先します |
 | `view_max_chars` | int | `20000` | `bili_view` が 1 回に返す最大文字数。`0` で無制限 |
 | `auto_send_txt` | bool | `false` | 有効にすると `bili_caption` が字幕の txt ファイルをチャットへ送信します |
 | `cache_ttl_seconds` | int | `3600` | 字幕キャッシュの有効期間（秒）。`0` でキャッシュ無効 |

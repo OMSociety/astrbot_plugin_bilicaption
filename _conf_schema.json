@@ -16,6 +16,12 @@
       }
     }
   },
+  "subtitle_language": {
+    "description": "优先选用的字幕语言",
+    "hint": "填语言代码前缀，如 zh、en、ja；同语言内优先人工字幕，没有匹配语言时取其余字幕",
+    "type": "string",
+    "default": "zh"
+  },
   "view_max_chars": {
     "description": "bili_view 单次返回的字幕最大字符数，0表示不限制",
     "hint": "超出时保留开头与结尾，bot 可用 offset 翻页读取中间部分",

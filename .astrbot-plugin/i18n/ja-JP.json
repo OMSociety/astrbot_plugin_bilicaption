@@ -14,6 +14,10 @@
         "description": "bili_jct"
       }
     },
+    "subtitle_language": {
+      "description": "優先する字幕言語",
+      "hint": "zh、en、ja などの言語コード接頭辞。同じ言語では手動字幕を優先し、一致する言語がなければ他の字幕を使います"
+    },
     "view_max_chars": {
       "description": "bili_view が 1 回に返す字幕の最大文字数。0 で無制限",
       "hint": "超過時は先頭と末尾を残し、ボットは offset で中間部分を読み進められます"

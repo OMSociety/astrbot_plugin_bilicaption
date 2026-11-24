@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 新增
 
+- 字幕择优：同一视频有多条字幕时，语言匹配的人工字幕优先于语言匹配的 AI 字幕，其次才是其它语言的字幕；默认偏好中文。
+- 新增配置项 `subtitle_language`，指定优先选用的字幕语言（如 `zh`、`en`、`ja`）。
 - 工具 `bili_view`：读取字幕用于理解、总结、评价视频；默认返回上限 20000 字，超限时保留开头 60% 与结尾 40%，提示总长与省略比例，并可用 `offset` 参数从任意位置翻页读取。
 - 链接识别新增 av 号（`av170001` / 纯数字 / `/video/av…` 链接）、`bili2233.cn` 短链与整段分享文本；链接中的 `?p=N` 自动作为分 P 号。
 - 字幕缓存：两个工具共用，默认有效期 1 小时、最多 64 条，过期条目顺带清理，超出容量淘汰最久未使用的条目；配置项 `cache_ttl_seconds`、`cache_max_entries`（TTL 为 0 关闭缓存）。
@@ -34,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Subtitle selection: when a video has several subtitle tracks, a manual track in the preferred language comes before an AI track in that language, and tracks in other languages come last; the preferred language defaults to Chinese.
+- Added option `subtitle_language` to set the preferred subtitle language (such as `zh`, `en`, `ja`).
 - Tool `bili_view`: reads subtitles for understanding, summarizing, or reviewing a video; returns at most 20000 characters by default, keeps the first 60% and last 40% when over the limit, reports the total length and omitted ratio, and pages through any position with the `offset` parameter.
 - Link recognition now covers av numbers (`av170001`, bare digits, `/video/av…` links), `bili2233.cn` short links, and whole share texts; `?p=N` in a link is used as the part number.
 - Subtitle cache shared by both tools: default TTL of 1 hour and up to 64 entries; expired entries are purged on access and the least recently used entry is evicted when over capacity; options `cache_ttl_seconds` and `cache_max_entries` (a TTL of 0 disables the cache).

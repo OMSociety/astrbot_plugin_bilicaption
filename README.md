@@ -71,6 +71,7 @@ AstrBot WebUI → 插件市场 → 搜索 `bilicaption`
 |:------|:-----|:-------|:-----|
 | `bilibili_cookie.sessdata` | string | `""` | B 站 SESSDATA Cookie（必需，字幕接口需要登录态） |
 | `bilibili_cookie.bili_jct` | string | `""` | B 站 bili_jct Cookie |
+| `subtitle_language` | string | `zh` | 优先选用的字幕语言（语言代码前缀）；同语言内优先人工字幕 |
 | `view_max_chars` | int | `20000` | `bili_view` 单次返回的字幕最大字符数，`0` 表示不限制 |
 | `auto_send_txt` | bool | `false` | 开启后 `bili_caption` 自动发送字幕 txt 文件到聊天 |
 | `cache_ttl_seconds` | int | `3600` | 字幕缓存有效期（秒），`0` 关闭缓存 |
