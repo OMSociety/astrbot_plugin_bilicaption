@@ -1,9 +1,9 @@
 """
 BiliCaption 核心逻辑模块（AstrBot 插件版）
 
-存放与 MaiBot 框架无关的纯逻辑：B 站链接解析（BV / av / 完整链接 / 短链）、
+存放与 AstrBot 框架无关的纯逻辑：B 站链接解析（BV / av / 完整链接 / 短链）、
 字幕获取、文本清洗、带过期清理的缓存、长度保护（首尾保留与 offset 分页），
-便于独立单元测试。plugin.py 通过 import 使用本模块。
+便于独立单元测试。main.py 通过 import 使用本模块。
 """
 
 import re
